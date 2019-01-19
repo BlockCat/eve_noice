@@ -1,0 +1,12 @@
+{% extends "base" %}
+
+{% block content %}
+    <nav>
+        <a href="/">Dashboard</a> |
+        <a href="/characters/logout">Logout</a>
+    </nav>
+    <h1>Welcome: {{ character.name }}</h1>
+    <p>Buys:</p>
+    <p>Sells:</p>
+
+{% endblock content %}

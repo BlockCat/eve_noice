@@ -1,0 +1,22 @@
+{% extends "base" %}
+
+{% block content %}
+    <h1>Welcome to Noice</h1>
+    <p>Noice is an EVE Online accounting tool, 
+        inspired by <a href="https://pwning.de/neat/">https://pwning.de/neat/</a>
+    </p>
+    <p>I created this tool because (imho) other accounting tools are overdesigned and make 
+    it difficult to 'just get what you want'. This tool aims to be as simple as possible, 
+    after all, who needs design if it just hinders you?
+    </p>
+
+    <p>If you are on this page, it means you are not logged in.</p>
+    <p>
+        <a href="/characters/login">            
+            <img src="/public/eve_button.png"/>
+        </a>
+    </p>
+
+
+
+{% endblock content %}
