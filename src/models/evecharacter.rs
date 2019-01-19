@@ -12,9 +12,9 @@ use rocket::request;
 pub struct EveCharacter {
     pub id: i32,
     pub name: String,
-    access_token: String,
-    refresh_token: String,
-    expiry_date: NaiveDateTime,
+    pub access_token: String,
+    pub refresh_token: String,
+    pub expiry_date: NaiveDateTime,
 }
 
 impl EveCharacter {

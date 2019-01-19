@@ -8,14 +8,16 @@
 #[macro_use] extern crate rocket_contrib;
 #[macro_use] extern crate serde_derive;
 #[macro_use] extern crate diesel;
+#[macro_use] extern crate dotenv_codegen;
 
+extern crate dotenv;
 extern crate chrono;
 extern crate r2d2;
 extern crate r2d2_diesel;
 extern crate oauth2;
 extern crate jwt;
 extern crate ammonia;
-extern crate hyper;
+extern crate reqwest;
 
 pub mod models;
 pub mod schema;
@@ -31,6 +33,10 @@ use rocket_contrib::serve::StaticFiles;
 pub struct EveDatabase(diesel::SqliteConnection);
 
 pub fn rocket_factory() -> Result<rocket::Rocket, String> {    
+    // Source environment variable
+    dotenv::dotenv().ok();
+
+
     let rocket = rocket::ignite()
         .attach(EveDatabase::fairing())
         .attach(Template::fairing())
