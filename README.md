@@ -1,13 +1,11 @@
-# Hangar
-Rust web framework, using [Rocket](https://rocket.rs), [Diesel](https://diesel.rs), and [stdweb](https://github.com/koute/stdweb)
-
+# Noice
+An eve online accounting tool
 ## Installation
 - `git clone` this project
-- copy `.env.local` to `.env`
+- copy `.env.example` to `.env`
 - modify `.env`
 - install diesel-cli `cargo install diesel-cli`
 - install cargo-web `cargo install cargo-web`
-- `rustup target add wasm32-unknown-emscripten`
 - create database and run migrations `diesel setup`
 
 ## Running
