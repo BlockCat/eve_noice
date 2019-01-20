@@ -30,21 +30,32 @@ pub fn index() -> Template {
 
 #[get("/update")]
 pub fn update(eve_character: EveCharacter, mut client: auth::AuthedClient) -> String {
-    use crate::esi::wallet::{EsiWallet, EsiWalletTransactions};
+    use crate::esi::wallet::{EsiWallet, EsiWalletTransactions, EsiWalletJournals};
     use restson::RestPath;
 
     let wallet: EsiWallet = match client.0.get(eve_character.id) {
         Ok(wallet) => wallet,
         Err(e) => return format!("Something went wrong: {:?}", e)
     };
+
+    // - Retrieve latest transaction t' from database
+    // - Do retrieve transactions While transaction_id(t') < id(last retrieved transaction)    
+    // - Do retrieve journals (with regards to market transactions) While journal_id(t') < journal_id(last retrieved transaction)
+    
+    // - Add all journals to database
+    // - Add all transactions to database
+    // - journals and transactions are now... connected.
+
+    // - Add freshly bought items to database-queue
+    // - Pop freshly sold items from database-queue (fifo)
+    // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ THE MOST DIFFICULT PART?
     
     let transactions: EsiWalletTransactions = client.0.get(eve_character.id).unwrap();
-    
-    let transactions = transactions.0.into_iter().map(|t| {
-        format!("date: {:?}, bought: {}, quantity: {}, type: {}, unit price: {:.2}\n", t.date, t.is_buy, t.quantity, t.type_id, t.unit_price)
-    }).collect::<String>();
+    let journals: EsiWalletJournals = client.0.get(eve_character.id).unwrap();
 
-    format!("Wallet: {:.2},\n Transactions:\n {}", wallet.0, transactions)
+    // Merge the two into one by
+
+    format!("Wallet: {:.2},\n", wallet.0)
 }
 
 #[get("/update", rank = 2)]

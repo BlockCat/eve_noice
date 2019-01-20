@@ -21,5 +21,20 @@ pub struct EsiWalletTransaction {
     pub unit_price: f32
 }
 
+#[derive(Serialize, Deserialize)]
+pub struct EsiWalletJournals(pub Vec<EsiWalletJournal>);
+
+#[derive(Serialize, Deserialize)]
+pub struct EsiWalletJournal {
+    pub amount: Option<f32>,
+    pub balance: Option<f32>,
+    pub date: DateTime<chrono::Utc>,
+    pub description: String,
+    pub id: i64,
+    pub ref_type: String,
+    pub tax: Option<f32>
+}
+
 restpath!(EsiWallet, "/characters/{character_id}/wallet/", [character_id: i32]);
 restpath!(EsiWalletTransactions, "/characters/{character_id}/wallet/transactions/", [character_id: i32]);
+restpath!(EsiWalletJournals, "/characters/{character_id}/wallet/journal/", [character_id: i32]);
