@@ -27,9 +27,9 @@ pub fn login() -> Redirect {
 
 
 #[get("/logout")]
-pub fn logout(mut cookies: Cookies) -> Redirect {
-    cookies.remove(Cookie::named("char_id"));
-    cookies.remove(Cookie::named("key"));
+pub fn logout(mut cookies: Cookies) -> Redirect {    
+    cookies.remove_private(Cookie::named("key"));
+    
     Redirect::to("/")
 }
 
