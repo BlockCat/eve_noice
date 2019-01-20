@@ -55,20 +55,17 @@ pub fn callback(code: String, state: String, conn: EveDatabase, mut cookies: Coo
     
     let new_character = EveCharacter::new(id, name, access_token.clone(), refresh_token, expiry_date);
 
-    new_character.insert(&conn).map_err(|_| {
+    new_character.insert(&conn).map_err(|e| {
+        print!("{:?}", e);
         String::from("Something went wrong when adding character to the database.")
     })?;
     
-    let cookie_char_id = Cookie::build("char_id", id.to_string())
+    let cookie_char_id = Cookie::build("key", id.to_string())
         .path("/")
         //.secure(true)
         .finish();
-    let cookie_access = Cookie::build("key", access_token)
-        .path("/")
-        //.secure(true)
-        .finish();
-    cookies.add(cookie_char_id);
-    cookies.add(cookie_access);
+
+    cookies.add_private(cookie_char_id);    
 
     println!("Adding cookies");
     // With this token result:    

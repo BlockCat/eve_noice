@@ -4,7 +4,6 @@ use crate::EveDatabase;
 use rocket::http::{Cookies, Cookie};
 use oauth2::Config;
 use oauth2::Token;
-use chrono::DateTime;
 use rocket::request;
 use rocket::http::Status;
 
@@ -21,10 +20,8 @@ pub fn create_config() -> Config {
     config
 }
 
-pub struct AuthedClient {
-    access_token: String,
-    client: reqwest::Client
-}
+
+pub struct AuthedClient(pub restson::RestClient);
 
 impl<'a, 'r> request::FromRequest<'a, 'r> for AuthedClient {
     type Error = ();
@@ -35,10 +32,9 @@ impl<'a, 'r> request::FromRequest<'a, 'r> for AuthedClient {
 
         // We get an eve_character,
         let access_token = if eve_character.expiry_date > chrono::Utc::now().naive_utc() { // Access token is not yet expired
-            eve_character.access_token
+            eve_character.access_token.clone()
         } else { // Access token is expired            
             let database = request.guard::<EveDatabase>()?;
-            let mut cookies = request.guard::<Cookies>().unwrap();
 
             let config = create_config();
             
@@ -51,28 +47,36 @@ impl<'a, 'r> request::FromRequest<'a, 'r> for AuthedClient {
             eve_character.refresh_token = token.refresh_token.unwrap();
             eve_character.expiry_date = (chrono::Utc::now() + chrono::Duration::seconds(token.expires_in.unwrap() as i64 - 60)).naive_utc();
 
-            let cookie_access = Cookie::build("key", eve_character.access_token.clone())
-                .path("/")
-                //.secure(true)
-                .finish();
-
-            cookies.add(cookie_access);
-
             // Update database
             match eve_character.insert(&database) {
-                Ok(_) => eve_character.access_token,
+                Ok(_) => eve_character.access_token.clone(),
                 Err(_) => return rocket::Outcome::Failure((Status::new(500, "Something went wrong in the database."), ()))
             }
-        };
+        };        
         
-        // Check if
-        let mut header = reqwest::header::HeaderMap::new();
-        header.insert(reqwest::header::USER_AGENT, "Gale Kishunuba".parse().unwrap());
-        
-        let client = reqwest::ClientBuilder::new()
-            .default_headers(header)
-            .build().unwrap();
+        let mut client = restson::RestClient::builder()
+            .send_null_body(false)
+            .build(dotenv!("EVE_ESI_URL")).unwrap();
 
-        rocket::Outcome::Success(AuthedClient{ access_token, client })
+        client.set_header("USER_AGENT", "Eve Noic - Gale Kishunuba ").unwrap();
+        client.set_header("Authorization", &format!("Bearer {}", access_token)).unwrap();
+
+        rocket::Outcome::Success(AuthedClient(client))
+    }
+}
+
+pub struct RestClient(restson::RestClient);
+
+impl<'a, 'r> request::FromRequest<'a, 'r> for RestClient {
+    type Error = ();
+
+    fn from_request(_: &'a request::Request<'r>) -> request::Outcome<Self, Self::Error> {
+        let mut client = restson::RestClient::builder()
+            .send_null_body(false)
+            .build(dotenv!("EVE_ESI_URL")).unwrap();
+
+        client.set_header("USER_AGENT", "Eve Noic - Gale Kishunuba ").unwrap();
+
+        rocket::Outcome::Success(RestClient(client))
     }
 }

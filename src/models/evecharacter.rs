@@ -44,21 +44,14 @@ impl<'a, 'r> request::FromRequest<'a, 'r> for EveCharacter {
         let db = request.guard::<EveDatabase>()?;        
 
         let user_id: i32 = match request.cookies()
-            .get("char_id")
+            .get_private("key")
             .and_then(|cookie| cookie.value().parse().ok()) {
                 Some(user_id) => user_id,
                 None => return rocket::Outcome::Forward(())
             };
 
-        let raccess_token: String = match request.cookies()
-            .get("key")
-            .map(|cookie| cookie.value().to_owned()) {
-                Some(raccess_token) => raccess_token,
-                None => return rocket::Outcome::Forward(())
-            };
-
         let eve_character = eve_characters
-            .filter(id.eq(user_id).and(access_token.eq(raccess_token)))
+            .filter(id.eq(user_id))
             .first::<EveCharacter>(&db.0);
 
         match eve_character {

@@ -2,6 +2,7 @@
 
 {% block content %}
     <nav>
+        <a href="/update">Update</a> |
         <a href="/">Dashboard</a> |
         <a href="/characters/logout">Logout</a>
     </nav>

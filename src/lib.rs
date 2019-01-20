@@ -17,7 +17,7 @@ extern crate r2d2_diesel;
 extern crate oauth2;
 extern crate jwt;
 extern crate ammonia;
-extern crate reqwest;
+extern crate restson;
 
 pub mod models;
 pub mod schema;

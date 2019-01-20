@@ -1,40 +1,18 @@
 use crate::auth::AuthedClient;
-use reqwest::header;
+use chrono::NaiveDateTime;
 
-fn get_hyper_client() -> reqwest::Client {
-    let mut headers = header::HeaderMap::new();
-    headers.insert(header::USER_AGENT, "Gale Kishunuba".parse().unwrap());
-
-    reqwest::ClientBuilder::new()
-        .default_headers(headers)
-        .build().unwrap()
-}
-
-macro_rules! get_esi {
-    ($function_name:ident, $path:tt, $ret:ty, $(($n:ident: $t:ty)),*) => {
-        fn $function_name($($n: $t), *) -> $ret {
-            let esi_url = dotenv!("EVE_ESI_URL");
-            let esi_path = format!($path, $($n = $n), *);
-            let esi_path = format!("{}{}", esi_url, esi_path);
-            
-            println!("{}", esi_path);
-            panic!()
+#[macro_export]
+macro_rules! restpath {
+    ($s:ident, $path:expr, [$($a:ident: $t:ty), *]) => {
+        impl RestPath<($($t), *)> for $s {
+            fn get_path(($($a), *) : ($($t), *)) -> Result<String, restson::Error> {
+                // Create esi_path first, then prepends /latest to it, so that it works with restson                
+                Ok(format!("/latest{}", format!($path, $($a = $a), *)))
+            }
         }
     };
 }
 
-macro_rules! get_esiauth {
-    ($function_name:ident, $path:tt, $ret:ty, $(($n:ident: $t:ty)),*) => {
-        fn $function_name(client: AuthedClient, $($n: $t), *) -> $ret {
-            let esi_url = dotenv!("EVE_ESI_URL");
-            let esi_path = format!($path, $($n = $n), *);
-            let esi_path = format!("{}{}", esi_url, esi_path);
-            
-            println!("{}", esi_path);
-            panic!()
-        }
-    };
-}
 
-get_esiauth!(get_wallet, "/characters/{character_id}/", f32, (character_id: i32));
-get_esi!(get_alliance, "/alliances/{alliance_id}/", f32, (alliance_id: i32));
+#[macro_use]
+pub mod wallet;
