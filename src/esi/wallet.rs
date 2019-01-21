@@ -1,9 +1,6 @@
 use restson::RestPath;
+
 use chrono::NaiveDateTime;
-
-use crate::schema::esi_wallet_transactions;
-use crate::schema::esi_wallet_journals;
-
 
 #[derive(Serialize, Deserialize)]
 pub struct EsiWallet(pub f32);
@@ -11,8 +8,7 @@ pub struct EsiWallet(pub f32);
 #[derive(Serialize, Deserialize)]
 pub struct EsiWalletTransactions(pub Vec<EsiWalletTransaction>);
 
-#[derive(Serialize, Deserialize, Queryable, Insertable, Associations)]
-#[belongs_to(EsiWalletJournal, foreign_key = "journal_ref_id")]
+#[derive(Serialize, Deserialize)]
 pub struct EsiWalletTransaction {
     pub client_id: i32,
     pub date: NaiveDateTime,
@@ -26,10 +22,13 @@ pub struct EsiWalletTransaction {
     pub unit_price: f32
 }
 
+
+
+
 #[derive(Serialize, Deserialize)]
 pub struct EsiWalletJournals(pub Vec<EsiWalletJournal>);
 
-#[derive(Serialize, Deserialize, )]
+#[derive(Serialize, Deserialize)]
 pub struct EsiWalletJournal {
     pub amount: Option<f32>,
     pub balance: Option<f32>,
@@ -39,6 +38,7 @@ pub struct EsiWalletJournal {
     pub ref_type: String,
     pub tax: Option<f32>
 }
+
 
 restpath!(EsiWallet, "/characters/{character_id}/wallet/", [character_id: i32]);
 restpath!(EsiWalletTransactions, "/characters/{character_id}/wallet/transactions/", [character_id: i32]);

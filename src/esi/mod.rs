@@ -1,5 +1,4 @@
-use crate::auth::AuthedClient;
-use chrono::NaiveDateTime;
+
 
 #[macro_export]
 macro_rules! restpath {
@@ -13,6 +12,8 @@ macro_rules! restpath {
     };
 }
 
+#[macro_use] mod wallet;
 
-#[macro_use]
-pub mod wallet;
+pub use self::wallet::EsiWallet;
+pub use self::wallet::EsiWalletJournals;
+pub use self::wallet::EsiWalletTransactions;

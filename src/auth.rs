@@ -1,7 +1,6 @@
 use crate::models::EveCharacter;
 use crate::EveDatabase;
 
-use rocket::http::{Cookies, Cookie};
 use oauth2::Config;
 use oauth2::Token;
 use rocket::request;
@@ -48,7 +47,7 @@ impl<'a, 'r> request::FromRequest<'a, 'r> for AuthedClient {
             eve_character.expiry_date = (chrono::Utc::now() + chrono::Duration::seconds(token.expires_in.unwrap() as i64 - 60)).naive_utc();
 
             // Update database
-            match eve_character.insert(&database) {
+            match eve_character.upsert(&database) {
                 Ok(_) => eve_character.access_token.clone(),
                 Err(_) => return rocket::Outcome::Failure((Status::new(500, "Something went wrong in the database."), ()))
             }

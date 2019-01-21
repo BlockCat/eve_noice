@@ -12,8 +12,6 @@
 
 extern crate dotenv;
 extern crate chrono;
-extern crate r2d2;
-extern crate r2d2_diesel;
 extern crate oauth2;
 extern crate jwt;
 extern crate ammonia;
@@ -23,8 +21,8 @@ pub mod models;
 pub mod schema;
 
 mod auth;
-mod controllers;
 mod esi;
+mod controllers;
 
 use rocket_contrib::templates::Template;
 use rocket_contrib::serve::StaticFiles;

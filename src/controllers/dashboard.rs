@@ -1,15 +1,9 @@
 use rocket::Route;
-use rocket::response::*;
-use rocket::http::{Cookies, Cookie, Status};
+use rocket::http::Status;
 use rocket_contrib::templates::*;
-
-use jwt::Token;
-use jwt::header::Header;
-use jwt::claims::Claims;
 
 use crate::auth;
 use crate::models::EveCharacter;
-use crate::EveDatabase;
 
 #[derive(Serialize)]
 struct DashBoardTemplate {
@@ -30,9 +24,8 @@ pub fn index() -> Template {
 
 #[get("/update")]
 pub fn update(eve_character: EveCharacter, mut client: auth::AuthedClient) -> String {
-    use crate::esi::wallet::{EsiWallet, EsiWalletTransactions, EsiWalletJournals};
-    use restson::RestPath;
-
+    use crate::esi::{EsiWallet, EsiWalletTransactions, EsiWalletJournals};
+    
     let wallet: EsiWallet = match client.0.get(eve_character.id) {
         Ok(wallet) => wallet,
         Err(e) => return format!("Something went wrong: {:?}", e)

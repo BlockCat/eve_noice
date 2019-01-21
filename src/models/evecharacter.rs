@@ -1,7 +1,6 @@
 use diesel::RunQueryDsl;
 use diesel::QueryDsl;
 use diesel::ExpressionMethods;
-use diesel::BoolExpressionMethods;
 
 use crate::schema::eve_characters;
 use crate::EveDatabase;
@@ -17,6 +16,7 @@ pub struct EveCharacter {
     pub expiry_date: NaiveDateTime,
 }
 
+
 impl EveCharacter {
     pub fn new(id: i32, name: String, access_token: String, refresh_token: String, expiry_date: u32) -> EveCharacter {
         
@@ -27,12 +27,8 @@ impl EveCharacter {
         }
     }
 
-    pub fn insert(&self, conn: &EveDatabase) -> diesel::result::QueryResult<usize> {
-        use crate::schema::eve_characters;
-        diesel::replace_into(eve_characters::table)        
-            .values(self)
-            .execute(&conn.0)
-    }
+    upsert!(eve_characters);
+
 }
 
 impl<'a, 'r> request::FromRequest<'a, 'r> for EveCharacter {
