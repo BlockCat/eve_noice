@@ -43,8 +43,8 @@ pub fn update(eve_character: EveCharacter, mut client: auth::AuthedClient) -> St
     // - Pop freshly sold items from database-queue (fifo)
     // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ THE MOST DIFFICULT PART?
     
-    let transactions: EsiWalletTransactions = client.0.get(eve_character.id).unwrap();
-    let journals: EsiWalletJournals = client.0.get(eve_character.id).unwrap();
+    let _transactions: EsiWalletTransactions = client.0.get(eve_character.id).unwrap();
+    let _journals: EsiWalletJournals = client.0.get(eve_character.id).unwrap();
 
     // Merge the two into one by
 

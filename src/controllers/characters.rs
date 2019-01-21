@@ -36,6 +36,7 @@ pub fn logout(mut cookies: Cookies) -> Redirect {
 
 //TODO: To Result return
 #[get("/callback?<code>&<state>")]
+#[allow(unused)]
 pub fn callback(code: String, state: String, conn: EveDatabase, mut cookies: Cookies) -> std::result::Result<Redirect, String> {
     let config = auth::create_config();
 

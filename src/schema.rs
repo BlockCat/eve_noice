@@ -12,6 +12,7 @@ table! {
     wallet_transactions (transaction_id) {
         transaction_id -> Integer,
         client_id -> Integer,
+        journal_id -> BigInt,
         date -> Timestamp,
         is_buy -> Bool,
         is_personal -> Bool,
