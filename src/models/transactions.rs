@@ -18,5 +18,5 @@ pub struct WalletTransaction {
 }
 
 impl WalletTransaction {
-        
+    upsert!(wallet_transactions);
 }
