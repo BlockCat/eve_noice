@@ -1,4 +1,14 @@
 table! {
+    complete_transactions (buy_transaction_id, sell_transaction_id) {
+        character_id -> Integer,
+        buy_transaction_id -> Nullable<BigInt>,
+        sell_transaction_id -> BigInt,
+        amount -> Integer,
+        taxes -> Float,
+    }
+}
+
+table! {
     eve_characters (id) {
         id -> Integer,
         name -> Text,
@@ -9,10 +19,19 @@ table! {
 }
 
 table! {
+    transaction_queues (character_id, transaction_id) {
+        character_id -> Integer,
+        type_id -> Integer,
+        transaction_id -> BigInt,
+        amount_left -> Integer,
+    }
+}
+
+table! {
     wallet_transactions (transaction_id) {
-        transaction_id -> Integer,
+        transaction_id -> BigInt,
+        character_id -> Integer,
         client_id -> Integer,
-        journal_id -> BigInt,
         date -> Timestamp,
         is_buy -> Bool,
         is_personal -> Bool,
@@ -20,13 +39,17 @@ table! {
         quantity -> Integer,
         type_id -> Integer,
         unit_price -> Float,
-        description -> Text,
-        total_amount -> Float,
-        tax -> Float,
     }
 }
 
+joinable!(complete_transactions -> eve_characters (character_id));
+joinable!(transaction_queues -> eve_characters (character_id));
+joinable!(transaction_queues -> wallet_transactions (transaction_id));
+joinable!(wallet_transactions -> eve_characters (character_id));
+
 allow_tables_to_appear_in_same_query!(
+    complete_transactions,
     eve_characters,
+    transaction_queues,
     wallet_transactions,
 );

@@ -27,14 +27,46 @@ macro_rules! upsert {
 #[macro_export]
 macro_rules! find {
     ($x:ident => $id:ident: $t:ty) => {
-        pub fn find(id: $t, conn: &crate::EveDatabase) -> diesel::QueryResult<Self> {
+        pub fn all(conn: &crate::EveDatabase) -> diesel::QueryResult<Vec<Self>> {
+            use diesel::QueryDsl;
+            use diesel::RunQueryDsl;
+            
+            use crate::schema::$x::dsl::*;
+
+            $x.limit(30).load(&conn.0)            
+        }
+
+        pub fn find(tid: $t, conn: &crate::EveDatabase) -> diesel::QueryResult<Self> {
             use diesel::QueryDsl;
             use diesel::ExpressionMethods;
             use diesel::RunQueryDsl;
 
             use crate::schema::$x::dsl::*;
             
-            $x.filter($id.eq(id))
+            $x.filter($id.eq(tid))
+                .first(&conn.0)
+        }
+    };
+
+    ($x:ident => $id:ident: $t:ty | $f:ident) => {
+        pub fn all(character_tid: i32, conn: &crate::EveDatabase) -> diesel::QueryResult<Vec<Self>> {
+            use diesel::QueryDsl;
+            use diesel::ExpressionMethods;
+            use diesel::RunQueryDsl;
+            
+            use crate::schema::$x::dsl::*;
+
+            $x.filter($f.eq(character_tid)).limit(30).load(&conn.0)            
+        }
+
+        pub fn find(tid: $t, conn: &crate::EveDatabase) -> diesel::QueryResult<Self> {
+            use diesel::QueryDsl;
+            use diesel::ExpressionMethods;
+            use diesel::RunQueryDsl;
+
+            use crate::schema::$x::dsl::*;
+            
+            $x.filter($id.eq(tid))
                 .first(&conn.0)
         }
     };
@@ -42,26 +74,28 @@ macro_rules! find {
 
 #[macro_export]
 macro_rules! find_extremes {
-    ($x:ident on $or:ident) => {
-        pub fn find_latest(conn: &crate::EveDatabase) -> diesel::QueryResult<Self> {
+    ($x:ident on $or:ident for $f:ident) => {
+        pub fn find_latest(character_tid: i32, conn: &crate::EveDatabase) -> diesel::QueryResult<Self> {
             use diesel::QueryDsl;
             use diesel::ExpressionMethods;
             use diesel::RunQueryDsl;
 
             use crate::schema::$x::dsl::*;
             
-            $x.order($or.desc())
+            $x.filter($f.eq(character_tid))
+                .order($or.desc())
                 .first(&conn.0)
         }
 
-        pub fn find_earliest(conn: &crate::EveDatabase) -> diesel::QueryResult<Self> {
+        pub fn find_earliest(character_tid: i32,  conn: &crate::EveDatabase) -> diesel::QueryResult<Self> {
             use diesel::QueryDsl;
             use diesel::ExpressionMethods;
             use diesel::RunQueryDsl;
 
             use crate::schema::$x::dsl::*;
             
-            $x.order($or.asc())
+            $x.filter($f.eq(character_tid))
+                .order($or.asc())
                 .first(&conn.0)
         }
     };
@@ -69,6 +103,8 @@ macro_rules! find_extremes {
 
 #[macro_use] mod evecharacter;
 #[macro_use] mod transactions;
+#[macro_use] mod transaction_queue;
 
 pub use self::evecharacter::EveCharacter;
+pub use self::transaction_queue::TransactionQueue;
 pub use self::transactions::WalletTransaction;

@@ -2,18 +2,26 @@ use rocket::Route;
 use rocket::http::Status;
 use rocket_contrib::templates::*;
 
+use chrono::{ DateTime, Utc };
+
 use crate::auth;
-use crate::models::EveCharacter;
+use crate::EveDatabase;
+use crate::esi::{EsiWallet, EsiWalletTransactions};
+use crate::models::{ EveCharacter, WalletTransaction, TransactionQueue};
 
 #[derive(Serialize)]
 struct DashBoardTemplate {
-    character: EveCharacter
+    character: EveCharacter,
+    transactions: Vec<WalletTransaction>
 }
 
 #[get("/")]
-pub fn dashboard(eve_character: EveCharacter) -> Template {
+pub fn dashboard(eve_character: EveCharacter, db: EveDatabase) -> Template {
+
+
     Template::render("dashboard/dashboard", DashBoardTemplate {
-        character: eve_character
+        transactions: WalletTransaction::all(eve_character.id, &db).unwrap(),
+        character: eve_character,
     })
 }
 
@@ -23,28 +31,81 @@ pub fn index() -> Template {
 }
 
 #[get("/update")]
-pub fn update(eve_character: EveCharacter, mut client: auth::AuthedClient) -> String {
-    use crate::esi::{EsiWallet, EsiWalletTransactions, EsiWalletJournals};
-    
+pub fn update(eve_character: EveCharacter, mut client: auth::AuthedClient, db: EveDatabase) -> String {
     let wallet: EsiWallet = match client.0.get(eve_character.id) {
         Ok(wallet) => wallet,
         Err(e) => return format!("Something went wrong: {:?}", e)
     };
 
     // - Retrieve latest transaction t' from database
-    // - Do retrieve transactions While transaction_id(t') < id(last retrieved transaction)    
-    // - Do retrieve journals (with regards to market transactions) While journal_id(t') < journal_id(last retrieved transaction)
-    
-    // - Add all journals to database
+    // - Do retrieve transactions While transaction_id(t') < id(last retrieved transaction)
+
     // - Add all transactions to database
     // - journals and transactions are now... connected.
 
     // - Add freshly bought items to database-queue
     // - Pop freshly sold items from database-queue (fifo)
     // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ THE MOST DIFFICULT PART?
+
+    let latest_transaction_date = match WalletTransaction::find_latest(eve_character.id, &db) {
+        Ok(latest_transaction) => DateTime::from_utc(latest_transaction.date, Utc),
+        Err(diesel::NotFound) => (chrono::Utc::now() - chrono::Duration::days(30)),
+        Err(e) => panic!(e)
+    };    
+
+    // Walk back through esi transactions and journals
+    // ----------------------------------------------------    
+    let EsiWalletTransactions(mut esi_transactions) = client.0.get(eve_character.id).unwrap();
+
+    println!("Starting walkback till: {:?}, right now: {:?}", latest_transaction_date, esi_transactions.last().unwrap().date);
+
+    while esi_transactions.last().unwrap().date > latest_transaction_date {        
+        let latest_id = esi_transactions.last().unwrap().transaction_id.to_string();
+        let EsiWalletTransactions(new_transactions) = client.0.get_with(eve_character.id, &[("from_id", &latest_id)]).unwrap();
+        println!("transactions: {:?}", new_transactions);
+        esi_transactions.extend(new_transactions);        
+    }
+
+    // ----------------------------------------------------    
+
+    // Collect into map
+
+    println!("Retrieved: {:?}", esi_transactions);
     
-    let _transactions: EsiWalletTransactions = client.0.get(eve_character.id).unwrap();
-    let _journals: EsiWalletJournals = client.0.get(eve_character.id).unwrap();
+    let esi_transactions: Vec<_> = esi_transactions.into_iter()
+        .take_while(|x| x.date > latest_transaction_date)
+        .map(|x| WalletTransaction::new(eve_character.id, x))
+        .collect();
+
+    WalletTransaction::upsert_batch(&db, &esi_transactions).expect("Could not update the database");
+
+    let transaction_queue = esi_transactions.iter()
+        .filter(|x| x.is_buy)
+        .map(|x| TransactionQueue::new(eve_character.id, x.type_id, x.transaction_id, x.quantity))
+        .collect::<Vec<_>>();
+
+    TransactionQueue::upsert_batch(&db, &transaction_queue).expect("Could not insert bought into queue");
+
+    for transaction in esi_transactions.iter().filter(|x| !x.is_buy) {
+        // Now take it from queue
+        let mut quantity_left = transaction.quantity;
+
+        while quantity_left > 0 {
+            let latest = TransactionQueue::find_latest(eve_character.id, transaction.type_id, &db).ok();
+            if let Some(mut latest) = latest {
+                // There is a latest buying transaction
+                let quantity_taken = std::cmp::min(quantity_left, latest.amount_left);
+                
+                quantity_left -= quantity_taken;
+                latest.amount_left -= quantity_taken;
+                latest.upsert(&db).expect("Could not upsert transaction queue");                
+            } else {
+                // No latest transaction, this sell order is problematic :thinking:
+            }
+        }
+        
+    }
+    
 
     // Merge the two into one by
 

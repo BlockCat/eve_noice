@@ -1,17 +1,17 @@
 use restson::RestPath;
 
-use chrono::NaiveDateTime;
+use chrono::{DateTime, Utc};
 
 #[derive(Serialize, Deserialize)]
 pub struct EsiWallet(pub f32);
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct EsiWalletTransactions(pub Vec<EsiWalletTransaction>);
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct EsiWalletTransaction {
     pub client_id: i32,
-    pub date: NaiveDateTime,
+    pub date: DateTime<Utc>,
     pub is_buy: bool,
     pub is_personal: bool,    
     pub journal_ref_id: i64,
@@ -22,24 +22,5 @@ pub struct EsiWalletTransaction {
     pub unit_price: f32
 }
 
-
-
-
-#[derive(Serialize, Deserialize)]
-pub struct EsiWalletJournals(pub Vec<EsiWalletJournal>);
-
-#[derive(Serialize, Deserialize)]
-pub struct EsiWalletJournal {
-    pub amount: Option<f32>,
-    pub balance: Option<f32>,
-    pub date: NaiveDateTime,
-    pub description: String,
-    pub id: i64,
-    pub ref_type: String,
-    pub tax: Option<f32>
-}
-
-
 restpath!(EsiWallet, "/characters/{character_id}/wallet/", [character_id: i32]);
 restpath!(EsiWalletTransactions, "/characters/{character_id}/wallet/transactions/", [character_id: i32]);
-restpath!(EsiWalletJournals, "/characters/{character_id}/wallet/journal/", [character_id: i32]);

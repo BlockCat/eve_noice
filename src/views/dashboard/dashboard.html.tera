@@ -7,7 +7,27 @@
         <a href="/characters/logout">Logout</a>
     </nav>
     <h1>Welcome: {{ character.name }}</h1>
-    <p>Buys:</p>
-    <p>Sells:</p>
+    <table>
+        <thead>
+            <th>Transaction id</th>
+            <th>Date</th>
+            <th>Quantity</th>
+            <th>Unit price</th>
+            <th>Tax</th>
+            <th>Total</th>
+        </thead>
+        <tbody>
+        {% for transaction in transactions %}
+            <tr>
+                <td>{{transaction.transaction_id}}</td>
+                <td>{{ transaction.is_buy }}</td>
+                <td>{{transaction.quantity}}</td>
+                <td>{{transaction.unit_price}}</td>
+                <td>{{transaction.tax}}</td>
+                <td>{{transaction.total_amount}}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
 
 {% endblock content %}

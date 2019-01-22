@@ -23,5 +23,5 @@ macro_rules! restpath {
 #[macro_use] mod wallet;
 
 pub use self::wallet::EsiWallet;
-pub use self::wallet::EsiWalletJournals;
+pub use self::wallet::EsiWalletTransaction;
 pub use self::wallet::EsiWalletTransactions;

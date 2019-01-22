@@ -28,7 +28,7 @@ impl EveCharacter {
     }
 
     upsert!(eve_characters);
-
+    find!(eve_characters => id: i32);
 }
 
 impl<'a, 'r> request::FromRequest<'a, 'r> for EveCharacter {
