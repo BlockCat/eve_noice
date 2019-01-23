@@ -8,23 +8,27 @@ use crate::auth;
 use crate::EveDatabase;
 use crate::esi::{EsiWallet, EsiWalletTransactions};
 use crate::models::{ EveCharacter, WalletTransaction, TransactionQueue, CompleteTransaction};
-
-#[derive(Serialize)]
-struct DashBoardTemplate {
-    character: EveCharacter,
-    bought: Vec<WalletTransaction>,
-    sold: Vec<CompleteTransaction>
-}
+use crate::view_models::{ DashboardViewModel, BoughtTransaction, SoldTransaction};
 
 #[get("/")]
 pub fn dashboard(eve_character: EveCharacter, db: EveDatabase) -> Template {
 
+    let sold = WalletTransaction::all_buy(eve_character.id, &db).expect("Could not get all bought transactions of character")
+        .into_iter()
+        .map(|x| {
+            BoughtTransaction::new(
+                x.date, 
+                x.is_buy,
+                x.quantity,
+                x.unit_price,
+                x.quantity as f32 * x.unit_price)
+        }).collect();
 
-    Template::render("dashboard/dashboard", DashBoardTemplate {
-        bought: WalletTransaction::all_buy(eve_character.id, &db).unwrap(),
-        character: eve_character,
-        sold: vec!()
-    })
+    let bought = vec!();// CompleteTransaction::all(eve_character.id, &db).expect("Could not get complete transactions")
+        
+    Template::render("dashboard/dashboard", DashboardViewModel::new(
+        eve_character.name, sold, bought
+    ))
 }
 
 #[get("/", rank = 2)]

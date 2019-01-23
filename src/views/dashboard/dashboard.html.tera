@@ -20,12 +20,12 @@
         <tbody>
         {% for transaction in bought %}
             <tr>
-                <td>{{transaction.transaction_id}}</td>
-                <td>{{ transaction.is_buy }}</td>
+                <td>{{transaction.date_time}}</td>
+                <td>{{ transaction.is_buy_text }}</td>
                 <td>{{transaction.quantity}}</td>
                 <td>{{transaction.unit_price}}</td>
-                <td>{{transaction.tax}}</td>
-                <td>{{transaction.total_amount}}</td>
+                <td>0.00</td>
+                <td>{{transaction.total_price}}</td>                
             </tr>
         {% endfor %}
         </tbody>
@@ -33,22 +33,24 @@
     <h2>Sold transactions</h2>
     <table>
         <thead>
-            <th>Transaction id</th>
             <th>Date</th>
+            <th>B/S</th>
             <th>Quantity</th>
             <th>Unit price</th>
-            <th>Tax</th>
-            <th>Total</th>
+            <th>Profit</th>
+            <th>%</th>
+            <th></th>
         </thead>
         <tbody>
-        {% for transaction in bought %}
+        {% for transaction in sold %}
             <tr>
-                <td>{{transaction.transaction_id}}</td>
-                <td>{{ transaction.is_buy }}</td>
+                <td>{{transaction.date_time}}</td>
+                <td>{{ transaction.is_buy_text }}</td>
                 <td>{{transaction.quantity}}</td>
                 <td>{{transaction.unit_price}}</td>
-                <td>{{transaction.tax}}</td>
-                <td>{{transaction.total_amount}}</td>
+                <td>{{transaction.profit}}</td>
+                <td>{{transaction.markup_percentage}}</td>
+                <td>{{transaction.time_span}}</td>
             </tr>
         {% endfor %}
         </tbody>

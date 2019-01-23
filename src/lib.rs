@@ -19,6 +19,7 @@ extern crate restson;
 
 pub mod models;
 pub mod schema;
+pub mod view_models;
 
 mod auth;
 mod esi;

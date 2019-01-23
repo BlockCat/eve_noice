@@ -1,11 +1,8 @@
-use diesel::RunQueryDsl;
-use diesel::QueryDsl;
-use diesel::ExpressionMethods;
-
 use crate::schema::eve_characters;
 use crate::EveDatabase;
 use chrono::NaiveDateTime;
 use rocket::request;
+use diesel::prelude::*;
 
 #[derive(Identifiable, Queryable, Insertable, Debug, Serialize)]
 pub struct EveCharacter {

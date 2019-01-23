@@ -2,15 +2,15 @@
 macro_rules! upsert {
     ($x:ident) => {        
         pub fn upsert(&self, conn: &crate::EveDatabase) -> diesel::result::QueryResult<usize> {
-            use diesel::RunQueryDsl;
+            use diesel::prelude::*;
+
             diesel::replace_into(crate::schema::$x::table)
                 .values(self)
                 .execute(&conn.0)
         }
 
         pub fn upsert_batch(conn: &crate::EveDatabase, batch: &[Self]) -> diesel::result::QueryResult<usize> {
-            use diesel::RunQueryDsl;
-            use diesel::Connection;
+            use diesel::prelude::*;
 
             conn.0.transaction(|| {
                 let result = batch.iter().filter_map(|e| {
@@ -28,19 +28,14 @@ macro_rules! upsert {
 macro_rules! find {
     ($x:ident => $id:ident: $t:ty) => {
         pub fn all(conn: &crate::EveDatabase) -> diesel::QueryResult<Vec<Self>> {
-            use diesel::QueryDsl;
-            use diesel::RunQueryDsl;
-            
+            use diesel::prelude::*;
             use crate::schema::$x::dsl::*;
 
             $x.limit(30).load(&conn.0)            
         }
 
         pub fn find(tid: $t, conn: &crate::EveDatabase) -> diesel::QueryResult<Self> {
-            use diesel::QueryDsl;
-            use diesel::ExpressionMethods;
-            use diesel::RunQueryDsl;
-
+            use diesel::prelude::*;
             use crate::schema::$x::dsl::*;
             
             $x.filter($id.eq(tid))
@@ -50,20 +45,14 @@ macro_rules! find {
 
     ($x:ident => $id:ident: $t:ty | $f:ident) => {
         pub fn all(character_tid: i32, conn: &crate::EveDatabase) -> diesel::QueryResult<Vec<Self>> {
-            use diesel::QueryDsl;
-            use diesel::ExpressionMethods;
-            use diesel::RunQueryDsl;
-            
+            use diesel::prelude::*;            
             use crate::schema::$x::dsl::*;
 
             $x.filter($f.eq(character_tid)).limit(30).load(&conn.0)            
         }
 
         pub fn find(tid: $t, conn: &crate::EveDatabase) -> diesel::QueryResult<Self> {
-            use diesel::QueryDsl;
-            use diesel::ExpressionMethods;
-            use diesel::RunQueryDsl;
-
+            use diesel::prelude::*;
             use crate::schema::$x::dsl::*;
             
             $x.filter($id.eq(tid))
@@ -76,10 +65,7 @@ macro_rules! find {
 macro_rules! find_extremes {
     ($x:ident on $or:ident for $f:ident) => {
         pub fn find_latest(character_tid: i32, conn: &crate::EveDatabase) -> diesel::QueryResult<Self> {
-            use diesel::QueryDsl;
-            use diesel::ExpressionMethods;
-            use diesel::RunQueryDsl;
-
+            use diesel::prelude::*;
             use crate::schema::$x::dsl::*;
             
             $x.filter($f.eq(character_tid))
@@ -88,10 +74,7 @@ macro_rules! find_extremes {
         }
 
         pub fn find_earliest(character_tid: i32,  conn: &crate::EveDatabase) -> diesel::QueryResult<Self> {
-            use diesel::QueryDsl;
-            use diesel::ExpressionMethods;
-            use diesel::RunQueryDsl;
-
+            use diesel::prelude::*;
             use crate::schema::$x::dsl::*;
             
             $x.filter($f.eq(character_tid))
