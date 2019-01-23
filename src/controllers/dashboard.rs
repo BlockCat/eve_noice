@@ -7,7 +7,7 @@ use chrono::{ DateTime, Utc };
 use crate::auth;
 use crate::EveDatabase;
 use crate::esi::{EsiWallet, EsiWalletTransactions};
-use crate::models::{ EveCharacter, WalletTransaction, TransactionQueue};
+use crate::models::{ EveCharacter, WalletTransaction, TransactionQueue, CompleteTransaction};
 
 #[derive(Serialize)]
 struct DashBoardTemplate {
@@ -97,13 +97,10 @@ pub fn update(eve_character: EveCharacter, mut client: auth::AuthedClient, db: E
             let latest = TransactionQueue::find_latest(eve_character.id, transaction.type_id, &db).ok();
 
             // If that transaction actually exists:
-            if let Some(mut latest) = latest {
+            let (buy_transaction, quantity) = if let Some(mut latest) = latest {
                 // The quantity take from this queue can not be more than quantity left.
                 let quantity_taken = std::cmp::min(quantity_left, latest.amount_left);
                 
-                // Ehm, something about creating a new Finished Transaction
-                // Probably means that sell transactions don't need to be added to the database
-
                 // Process quantity
                 quantity_left -= quantity_taken;
                 latest.amount_left -= quantity_taken;
@@ -115,9 +112,20 @@ pub fn update(eve_character: EveCharacter, mut client: auth::AuthedClient, db: E
                     latest.delete(&db).expect("Could not delete from transaction queue");
                 }
                 
+                (Some(latest), quantity_taken)
             } else {
                 // No latest transaction, this sell order is problematic :thinking:
-            }
+                (None, quantity_left)
+            };
+
+            // TODO: Fix taxes
+            // Ehm, something about creating a new Finished Transaction
+            // Probably means that sell transactions don't need to be added to the database
+            let complete_transaction = CompleteTransaction::new(
+                eve_character.id,
+                buy_transaction.map(|x| x.transaction_id), 
+                transaction.transaction_id, quantity, 0.0);
+            complete_transaction.upsert(&db).expect("Could not insert complete transaction into database.");
         }
         
     }

@@ -32,10 +32,8 @@ impl TransactionQueue {
             .first(&conn.0)
     }
 
-    pub fn delete(self, conn: &crate::EveDatabase) -> diesel::QueryResult<usize> {
+    pub fn delete(&self, conn: &crate::EveDatabase) -> diesel::QueryResult<usize> {
         use crate::schema::transaction_queues::dsl::*;
-        diesel::delete(transaction_queues.filter(
-            character_id.eq(self.character_id).and(transaction_id.eq(self.transaction_id))
-        )).execute(&conn.0)
+        diesel::delete(transaction_queues.find((self.character_id, self.transaction_id))).execute(&conn.0)
     }
 }
