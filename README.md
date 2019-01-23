@@ -14,4 +14,7 @@ An eve online accounting tool
 - modify `Rocket.toml`
 - in server folder `cargo run`
 
-### Client side
+### Things to be done
+- buy orders have their broker fee too!
+- sell orders have taxes
+- sell orders don't have broker fees right? 
