@@ -12,7 +12,8 @@ use crate::models::{ EveCharacter, WalletTransaction, TransactionQueue, Complete
 #[derive(Serialize)]
 struct DashBoardTemplate {
     character: EveCharacter,
-    transactions: Vec<WalletTransaction>
+    bought: Vec<WalletTransaction>,
+    sold: Vec<CompleteTransaction>
 }
 
 #[get("/")]
@@ -20,8 +21,9 @@ pub fn dashboard(eve_character: EveCharacter, db: EveDatabase) -> Template {
 
 
     Template::render("dashboard/dashboard", DashBoardTemplate {
-        transactions: WalletTransaction::all(eve_character.id, &db).unwrap(),
+        bought: WalletTransaction::all_buy(eve_character.id, &db).unwrap(),
         character: eve_character,
+        sold: vec!()
     })
 }
 

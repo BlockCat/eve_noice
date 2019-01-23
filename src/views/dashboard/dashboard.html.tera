@@ -7,6 +7,7 @@
         <a href="/characters/logout">Logout</a>
     </nav>
     <h1>Welcome: {{ character.name }}</h1>
+    <h2>Bought transactions</h2>
     <table>
         <thead>
             <th>Transaction id</th>
@@ -17,7 +18,30 @@
             <th>Total</th>
         </thead>
         <tbody>
-        {% for transaction in transactions %}
+        {% for transaction in bought %}
+            <tr>
+                <td>{{transaction.transaction_id}}</td>
+                <td>{{ transaction.is_buy }}</td>
+                <td>{{transaction.quantity}}</td>
+                <td>{{transaction.unit_price}}</td>
+                <td>{{transaction.tax}}</td>
+                <td>{{transaction.total_amount}}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    <h2>Sold transactions</h2>
+    <table>
+        <thead>
+            <th>Transaction id</th>
+            <th>Date</th>
+            <th>Quantity</th>
+            <th>Unit price</th>
+            <th>Tax</th>
+            <th>Total</th>
+        </thead>
+        <tbody>
+        {% for transaction in bought %}
             <tr>
                 <td>{{transaction.transaction_id}}</td>
                 <td>{{ transaction.is_buy }}</td>

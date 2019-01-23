@@ -33,7 +33,22 @@ impl WalletTransaction {
             unit_price: transaction.unit_price
         }
     }
+
+    pub fn all_buy(character_tid: i32, conn: &crate::EveDatabase) -> diesel::QueryResult<Vec<Self>> {
+        use crate::schema::wallet_transactions::dsl::*;
+        use diesel::QueryDsl;
+        use diesel::RunQueryDsl;
+        use diesel::BoolExpressionMethods;
+        use diesel::ExpressionMethods;
+        
+
+        wallet_transactions.filter(character_id.eq(character_tid).and(is_buy.eq(true)))
+            .limit(50)
+            .load(&conn.0)
+    }   
+    
     upsert!(wallet_transactions);
     find!(wallet_transactions => transaction_id: i64 | character_id);
+
     find_extremes!(wallet_transactions on date for character_id);
 }
