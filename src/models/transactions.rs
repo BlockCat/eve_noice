@@ -2,7 +2,8 @@ use chrono::NaiveDateTime;
 use crate::esi::EsiWalletTransaction;
 use crate::schema::wallet_transactions;
 
-#[derive(Queryable, Insertable, Debug, Serialize)]
+#[derive(Identifiable, Queryable, Insertable, Debug, Serialize)]
+#[primary_key(transaction_id)]
 pub struct WalletTransaction {
     pub transaction_id: i64,
     pub character_id: i32,

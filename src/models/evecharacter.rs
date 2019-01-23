@@ -7,7 +7,7 @@ use crate::EveDatabase;
 use chrono::NaiveDateTime;
 use rocket::request;
 
-#[derive(Queryable, Insertable, Debug, Serialize)]
+#[derive(Identifiable, Queryable, Insertable, Debug, Serialize)]
 pub struct EveCharacter {
     pub id: i32,
     pub name: String,

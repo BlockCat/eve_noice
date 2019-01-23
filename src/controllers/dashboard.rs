@@ -30,6 +30,7 @@ pub fn index() -> Template {
     Template::render("dashboard/index", std::collections::HashMap::<String, String>::new())
 }
 
+// TODO: When updating we probably want some lock or something?
 #[get("/update")]
 pub fn update(eve_character: EveCharacter, mut client: auth::AuthedClient, db: EveDatabase) -> String {
     let wallet: EsiWallet = match client.0.get(eve_character.id) {
@@ -90,15 +91,30 @@ pub fn update(eve_character: EveCharacter, mut client: auth::AuthedClient, db: E
         // Now take it from queue
         let mut quantity_left = transaction.quantity;
 
+        // While there is a quantity left that needs to be processed
         while quantity_left > 0 {
+            // Take first transaction in the queue of the type that has a quantity left.
             let latest = TransactionQueue::find_latest(eve_character.id, transaction.type_id, &db).ok();
+
+            // If that transaction actually exists:
             if let Some(mut latest) = latest {
-                // There is a latest buying transaction
+                // The quantity take from this queue can not be more than quantity left.
                 let quantity_taken = std::cmp::min(quantity_left, latest.amount_left);
                 
+                // Ehm, something about creating a new Finished Transaction
+                // Probably means that sell transactions don't need to be added to the database
+
+                // Process quantity
                 quantity_left -= quantity_taken;
                 latest.amount_left -= quantity_taken;
-                latest.upsert(&db).expect("Could not upsert transaction queue");                
+
+                // Update the latest queue
+                if latest.amount_left > 0 {
+                    latest.upsert(&db).expect("Could not upsert transaction queue");
+                } else {
+                    latest.delete(&db).expect("Could not delete from transaction queue");
+                }
+                
             } else {
                 // No latest transaction, this sell order is problematic :thinking:
             }
