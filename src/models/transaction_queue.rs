@@ -27,7 +27,7 @@ impl TransactionQueue {
 
     pub fn find_latest(character_tid: i32, type_tid: i32, conn: &crate::EveDatabase) -> diesel::QueryResult<Self> {
         use crate::schema::transaction_queues::dsl::*;
-        transaction_queues.filter(character_id.eq(character_tid).and(type_id.eq(type_tid)).and(amount_left.lt(0)))
+        transaction_queues.filter(character_id.eq(character_tid).and(type_id.eq(type_tid)).and(amount_left.gt(0)))
             .order(transaction_id.desc())
             .first(&conn.0)
     }

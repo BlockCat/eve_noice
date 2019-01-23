@@ -16,6 +16,7 @@ extern crate oauth2;
 extern crate jwt;
 extern crate ammonia;
 extern crate restson;
+extern crate separator;
 
 pub mod models;
 pub mod schema;

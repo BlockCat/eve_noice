@@ -1,33 +1,32 @@
 use rocket::Route;
 use rocket::http::Status;
+use rocket::response::Redirect;
 use rocket_contrib::templates::*;
 
 use chrono::{ DateTime, Utc };
 
 use crate::auth;
 use crate::EveDatabase;
-use crate::esi::{EsiWallet, EsiWalletTransactions};
+use crate::esi::EsiWalletTransactions;
 use crate::models::{ EveCharacter, WalletTransaction, TransactionQueue, CompleteTransaction};
-use crate::view_models::{ DashboardViewModel, BoughtTransaction, SoldTransaction};
+use crate::view_models::DashboardViewModel;
 
 #[get("/")]
 pub fn dashboard(eve_character: EveCharacter, db: EveDatabase) -> Template {
 
-    let sold = WalletTransaction::all_buy(eve_character.id, &db).expect("Could not get all bought transactions of character")
+    let bought = WalletTransaction::all_buy(eve_character.id, &db)
+        .expect("Could not get all bought transactions of character")
         .into_iter()
-        .map(|x| {
-            BoughtTransaction::new(
-                x.date, 
-                x.is_buy,
-                x.quantity,
-                x.unit_price,
-                x.quantity as f32 * x.unit_price)
-        }).collect();
-
-    let bought = vec!();// CompleteTransaction::all(eve_character.id, &db).expect("Could not get complete transactions")
+        .map(|x| x.into())
+        .chain(
+            CompleteTransaction::all(eve_character.id, &db)
+                .expect("Could not get complete transactions")
+                .into_iter()
+                .map(|x| x.into())
+        ).collect();
         
     Template::render("dashboard/dashboard", DashboardViewModel::new(
-        eve_character.name, sold, bought
+        eve_character.name, bought
     ))
 }
 
@@ -38,11 +37,7 @@ pub fn index() -> Template {
 
 // TODO: When updating we probably want some lock or something?
 #[get("/update")]
-pub fn update(eve_character: EveCharacter, mut client: auth::AuthedClient, db: EveDatabase) -> String {
-    let wallet: EsiWallet = match client.0.get(eve_character.id) {
-        Ok(wallet) => wallet,
-        Err(e) => return format!("Something went wrong: {:?}", e)
-    };
+pub fn update(eve_character: EveCharacter, mut client: auth::AuthedClient, db: EveDatabase) -> Redirect {
 
     // - Retrieve latest transaction t' from database
     // - Do retrieve transactions While transaction_id(t') < id(last retrieved transaction)
@@ -67,17 +62,21 @@ pub fn update(eve_character: EveCharacter, mut client: auth::AuthedClient, db: E
     println!("Starting walkback till: {:?}, right now: {:?}", latest_transaction_date, esi_transactions.last().unwrap().date);
 
     while esi_transactions.last().unwrap().date > latest_transaction_date {        
-        let latest_id = esi_transactions.last().unwrap().transaction_id.to_string();
+        let latest_id = (esi_transactions.last().unwrap().transaction_id - 1).to_string();
         let EsiWalletTransactions(new_transactions) = client.0.get_with(eve_character.id, &[("from_id", &latest_id)]).unwrap();
-        println!("transactions: {:?}", new_transactions);
-        esi_transactions.extend(new_transactions);        
+        if !new_transactions.is_empty() {
+            println!("transactions: {:?}", new_transactions);
+            esi_transactions.extend(new_transactions);        
+        } else {
+            break;
+        }        
     }
 
     // ----------------------------------------------------    
 
     // Collect into map
 
-    println!("Retrieved: {:?}", esi_transactions);
+    println!("Retrieved transactions");
     
     let esi_transactions: Vec<_> = esi_transactions.into_iter()
         .take_while(|x| x.date > latest_transaction_date)
@@ -86,6 +85,8 @@ pub fn update(eve_character: EveCharacter, mut client: auth::AuthedClient, db: E
 
     WalletTransaction::upsert_batch(&db, &esi_transactions).expect("Could not update the database");
 
+    println!("Inserted transaction in database");
+
     let transaction_queue = esi_transactions.iter()
         .filter(|x| x.is_buy)
         .map(|x| TransactionQueue::new(eve_character.id, x.type_id, x.transaction_id, x.quantity))
@@ -93,22 +94,25 @@ pub fn update(eve_character: EveCharacter, mut client: auth::AuthedClient, db: E
 
     TransactionQueue::upsert_batch(&db, &transaction_queue).expect("Could not insert bought into queue");
 
+    println!("Inserted into bought queue");
+
     for transaction in esi_transactions.iter().filter(|x| !x.is_buy) {
         // Now take it from queue
         let mut quantity_left = transaction.quantity;
-
         // While there is a quantity left that needs to be processed
         while quantity_left > 0 {
+            println!("Quantity left: {}", quantity_left);
             // Take first transaction in the queue of the type that has a quantity left.
             let latest = TransactionQueue::find_latest(eve_character.id, transaction.type_id, &db).ok();
+
+            println!("Latest? : {:?}", latest);
 
             // If that transaction actually exists:
             let (buy_transaction, quantity) = if let Some(mut latest) = latest {
                 // The quantity take from this queue can not be more than quantity left.
                 let quantity_taken = std::cmp::min(quantity_left, latest.amount_left);
                 
-                // Process quantity
-                quantity_left -= quantity_taken;
+                // Process quantity                
                 latest.amount_left -= quantity_taken;
 
                 // Update the latest queue
@@ -124,9 +128,12 @@ pub fn update(eve_character: EveCharacter, mut client: auth::AuthedClient, db: E
                 (None, quantity_left)
             };
 
+            println!("Quantity taken: {}", quantity);
+            quantity_left -= quantity;
             // TODO: Fix taxes
             // Ehm, something about creating a new Finished Transaction
             // Probably means that sell transactions don't need to be added to the database
+
             let complete_transaction = CompleteTransaction::new(
                 eve_character.id,
                 buy_transaction.map(|x| x.transaction_id), 
@@ -139,7 +146,7 @@ pub fn update(eve_character: EveCharacter, mut client: auth::AuthedClient, db: E
 
     // Merge the two into one by
 
-    format!("Wallet: {:.2},\n", wallet.0)
+    Redirect::to(uri!(dashboard))
 }
 
 #[get("/update", rank = 2)]
