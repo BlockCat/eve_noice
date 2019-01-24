@@ -23,11 +23,17 @@ impl TransactionQueue {
     }
     upsert!(transaction_queues);
 
-    pub fn find_latest(character_tid: i32, type_tid: i32, conn: &crate::EveDatabase) -> diesel::QueryResult<(Self, Option<WalletTransaction>)> {
+    pub fn find_latest(character_tid: i32, type_tid: i32, bdate: chrono::NaiveDateTime, conn: &crate::EveDatabase) -> diesel::QueryResult<(Self, Option<WalletTransaction>)> {
         use crate::schema::transaction_queues::dsl::*;
-        use crate::schema::wallet_transactions::dsl::{wallet_transactions, transaction_id as buy_transaction};
-        transaction_queues.filter(character_id.eq(character_tid).and(type_id.eq(type_tid)).and(amount_left.gt(0)))
-            .order(transaction_id.desc())
+        use crate::schema::wallet_transactions::dsl::{wallet_transactions, transaction_id as buy_transaction, date as buy_date};
+
+        transaction_queues.filter(
+                character_id.eq(character_tid)
+                .and(type_id.eq(type_tid))
+                .and(amount_left.gt(0))
+                .and(buy_date.le(bdate))
+            )
+            .order(transaction_id.asc())
             .left_join(wallet_transactions.on(transaction_id.eq(buy_transaction)))
             .first(&conn.0)
     }

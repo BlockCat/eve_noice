@@ -53,9 +53,26 @@ impl From<WalletTransaction> for ViewTransaction {
 
 impl From<(CompleteTransaction, WalletTransaction, Option<WalletTransaction>)> for ViewTransaction {
     fn from((complete, sold, bought): (CompleteTransaction, WalletTransaction, Option<WalletTransaction>)) -> Self {
-        let bought_price = bought.map_or(0.0, |x| x.unit_price);
-        let bought_taxes = bought_price * 0.038 * complete.amount as f32;
+        
+        let (bought_price, bought_taxes, bought_date) = bought.map_or((0.0, 0.0, String::from("")), |x| {
+            let bought_price = x.unit_price;
+            let bought_taxes = x.unit_taxes * complete.amount as f32;
+            let elapsed = sold.date - x.date;
+
+            let elapsed = match (elapsed.num_weeks(), elapsed.num_days(), elapsed.num_hours(), elapsed.num_minutes(), elapsed.num_seconds()) {
+                (0, 0, 0, 0, a) => format!("{} s", a),
+                (0, 0, 0, a, _) => format!("{} m", a),
+                (0, 0, a, _, _) => format!("{} h", a),
+                (0, a, _, _, _) => format!("{} d", a),
+                (a, _, _, _, _) => format!("{} w", a),                
+            };
+
+            (bought_price, bought_taxes, elapsed)
+        });
+        
         let profit = complete.amount as f32 * (sold.unit_price - bought_price);
+
+
         ViewTransaction {
             transaction_id: sold.transaction_id,
             date_time: sold.date.format("%v %T").to_string(),
@@ -65,7 +82,7 @@ impl From<(CompleteTransaction, WalletTransaction, Option<WalletTransaction>)> f
             total_price: (sold.unit_price * complete.amount as f32).separated_string_with_fixed_place(2),
             profit: (profit - bought_taxes - 0.038 * profit ).separated_string_with_fixed_place(2),
             markup_percentage: ((sold.unit_price / bought_price - 1.0) * 100.0).separated_string_with_fixed_place(2),
-            time_span: String::from("16 h")
+            time_span: String::from(bought_date)
         }
     }
 }

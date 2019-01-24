@@ -39,16 +39,6 @@ pub fn index() -> Template {
 #[get("/update")]
 pub fn update(eve_character: EveCharacter, mut client: auth::AuthedClient, db: EveDatabase) -> Redirect {
 
-    // - Retrieve latest transaction t' from database
-    // - Do retrieve transactions While transaction_id(t') < id(last retrieved transaction)
-
-    // - Add all transactions to database
-    // - journals and transactions are now... connected.
-
-    // - Add freshly bought items to database-queue
-    // - Pop freshly sold items from database-queue (fifo)
-    // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ THE MOST DIFFICULT PART?
-
     let latest_transaction_date = match WalletTransaction::find_latest(eve_character.id, &db) {
         Ok(latest_transaction) => DateTime::from_utc(latest_transaction.date, Utc),
         Err(diesel::NotFound) => (chrono::Utc::now() - chrono::Duration::days(30)),
@@ -64,8 +54,7 @@ pub fn update(eve_character: EveCharacter, mut client: auth::AuthedClient, db: E
     while esi_transactions.last().unwrap().date > latest_transaction_date {        
         let latest_id = (esi_transactions.last().unwrap().transaction_id - 1).to_string();
         let EsiWalletTransactions(new_transactions) = client.0.get_with(eve_character.id, &[("from_id", &latest_id)]).unwrap();
-        if !new_transactions.is_empty() {
-            println!("transactions: {:?}", new_transactions);
+        if !new_transactions.is_empty() {            
             esi_transactions.extend(new_transactions);        
         } else {
             break;
@@ -75,9 +64,6 @@ pub fn update(eve_character: EveCharacter, mut client: auth::AuthedClient, db: E
     // ----------------------------------------------------    
 
     // Collect into map
-
-    println!("Retrieved transactions");
-    
     let esi_transactions: Vec<_> = esi_transactions.into_iter()
         .take_while(|x| x.date > latest_transaction_date)        
         .map(|x| {
@@ -104,14 +90,14 @@ pub fn update(eve_character: EveCharacter, mut client: auth::AuthedClient, db: E
 
     println!("Inserted into bought queue");
 
-    for transaction in esi_transactions.iter().filter(|x| !x.is_buy) {
+    for transaction in esi_transactions.iter().rev().filter(|x| !x.is_buy) {
         // Now take it from queue
         let mut quantity_left = transaction.quantity;
         // While there is a quantity left that needs to be processed
         while quantity_left > 0 {
             print!("Quantity left: {}, ", quantity_left);
             // Take first transaction in the queue of the type that has a quantity left.
-            let latest = TransactionQueue::find_latest(eve_character.id, transaction.type_id, &db).ok();
+            let latest = TransactionQueue::find_latest(eve_character.id, transaction.type_id, transaction.date, &db).ok();
 
             println!("latest: {:?}", latest);
 
@@ -135,8 +121,6 @@ pub fn update(eve_character: EveCharacter, mut client: auth::AuthedClient, db: E
                 // No latest transaction, this sell order is problematic :thinking:
                 (None, quantity_left)
             };
-
-            println!("Quantity taken: {}", quantity);
             quantity_left -= quantity;
             // TODO: Fix taxes
             // Ehm, something about creating a new Finished Transaction

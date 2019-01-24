@@ -32,12 +32,10 @@
                 <td class="center">Zartuks' overloaded invulnerability shield adapter</td>
                 <td class="center">{{transaction.quantity}}</td>
                 <td class="right">{{transaction.unit_price}}</td>
-                {% if transaction.is_buy_text == "B" %}
-                    <td class="right red">{{transaction.profit}}</td>                
+                {% if transaction.is_buy_text == "B" %}<td class="right red">-{{transaction.profit}}</td>
                 {% else %}
-                    <td class="right green">{{transaction.profit}}</td>
-                {% endif %}
-                
+                <td class="right green">{{transaction.profit}}</td>
+                {% endif %}                
                 <td class="center">{{transaction.markup_percentage}}</td>
                 <td class="left">{{transaction.time_span}}</td>
             </tr>
