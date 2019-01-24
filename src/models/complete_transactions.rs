@@ -1,6 +1,7 @@
 use crate::EveDatabase;
 use crate::schema::complete_transactions;
-use crate::models::WalletTransaction;
+
+use crate::models::{ WalletTransaction, InvType };
 
 #[derive(Identifiable, Queryable, Insertable, Debug, Serialize)]
 #[primary_key(buy_transaction_id, sell_transaction_id)]
@@ -33,15 +34,17 @@ impl CompleteTransaction {
         }
     }
 
-    pub fn all(character_tid: i32, conn: &EveDatabase) -> diesel::QueryResult<Vec<(CompleteTransaction, WalletTransaction, Option<WalletTransaction>)>> {
+    pub fn all(character_tid: i32, conn: &EveDatabase) -> diesel::QueryResult<Vec<(CompleteTransaction, WalletTransaction, InvType, Option<WalletTransaction>)>> {
         use diesel::prelude::*;
-        use crate::schema::wallet_transactions::dsl::{ transaction_id, wallet_transactions};        
+        use crate::schema::wallet_transactions::dsl::{ transaction_id, wallet_transactions, type_id};        
+        use crate::schema::inv_types::dsl::{inv_types, type_id as inv_type_id};
         use crate::schema::complete_transactions::dsl::*;
 
-        let sells:Vec<(CompleteTransaction, Option<WalletTransaction>)> = 
+        let sells:Vec<(CompleteTransaction, WalletTransaction, InvType)> = 
             complete_transactions
-            .filter(character_id.eq(character_tid))
-            .left_join(wallet_transactions.on(transaction_id.eq(sell_transaction_id)))            
+            .filter(character_id.eq(character_tid))            
+            .inner_join(wallet_transactions.on(transaction_id.eq(sell_transaction_id)))            
+            .inner_join(inv_types.on(type_id.eq(inv_type_id)))
             .load(&conn.0).expect("Could not get sell transactions for complete transactions");
 
         let buys: Vec<(CompleteTransaction, Option<WalletTransaction>)> = 
@@ -52,7 +55,7 @@ impl CompleteTransaction {
 
         Ok(sells.into_iter().zip(buys.into_iter())
             .map(|(sell, buy)| {
-                (sell.0, sell.1.unwrap(), buy.1)
+                (sell.0, sell.1, sell.2, buy.1)
             }).collect())        
     }
 

@@ -88,9 +88,11 @@ macro_rules! find_extremes {
 #[macro_use] mod transactions;
 #[macro_use] mod transaction_queue;
 #[macro_use] mod complete_transactions;
+#[macro_use] mod invtype;
 
 pub use self::evecharacter::EveCharacter;
 pub use self::transactions::WalletTransaction;
 pub use self::transaction_queue::TransactionQueue;
 pub use self::complete_transactions::CompleteTransaction;
+pub use self::invtype::InvType;
 

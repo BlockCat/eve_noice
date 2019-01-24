@@ -7,6 +7,9 @@ An eve online accounting tool
 - install diesel-cli `cargo install diesel-cli`
 - install cargo-web `cargo install cargo-web`
 - create database and run migrations `diesel setup`
+- Download eve database from [Fuzzworks](https://www.fuzzwork.co.uk/dump/latest/)
+- `CREATE TABLE inv_types AS  SELECT typeID, typeName FROM invTypes;`
+- `.dump inv_types`
 
 ## Running
 ### Server side

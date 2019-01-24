@@ -1,6 +1,5 @@
 use separator::FixedPlaceSeparatable;
-use crate::models::{ WalletTransaction, CompleteTransaction };
-
+use crate::models::{ WalletTransaction, CompleteTransaction, InvType };
 
 #[derive(Serialize)]
 pub struct DashboardViewModel {
@@ -22,6 +21,8 @@ impl DashboardViewModel {
 
 #[derive(Serialize)]
 pub struct ViewTransaction {
+    type_name: String,
+    type_id: i32,
     transaction_id: i64,
     date_time: String,
     is_buy_text: String,
@@ -33,11 +34,13 @@ pub struct ViewTransaction {
     time_span: String,
 }
 
-impl From<WalletTransaction> for ViewTransaction {
-    fn from(transaction: WalletTransaction) -> Self {
+impl From<(WalletTransaction, InvType)> for ViewTransaction {
+    fn from((transaction, item): (WalletTransaction, InvType)) -> Self {
         let total_price = transaction.unit_price * transaction.quantity as f32;
         let total_taxes = transaction.unit_taxes * transaction.quantity as f32;
         ViewTransaction {
+            type_name: item.type_name,
+            type_id: item.type_id,
             transaction_id: transaction.transaction_id,
             date_time: transaction.date.format("%v %T").to_string(),
             is_buy_text: String::from(if transaction.is_buy { "B" } else { "S" } ),
@@ -51,8 +54,8 @@ impl From<WalletTransaction> for ViewTransaction {
     }
 }
 
-impl From<(CompleteTransaction, WalletTransaction, Option<WalletTransaction>)> for ViewTransaction {
-    fn from((complete, sold, bought): (CompleteTransaction, WalletTransaction, Option<WalletTransaction>)) -> Self {
+impl From<(CompleteTransaction, WalletTransaction, InvType, Option<WalletTransaction>)> for ViewTransaction {
+    fn from((complete, sold, item, bought): (CompleteTransaction, WalletTransaction, InvType, Option<WalletTransaction>)) -> Self {
         
         let (bought_price, bought_taxes, bought_date) = bought.map_or((0.0, 0.0, String::from("")), |x| {
             let bought_price = x.unit_price;
@@ -74,6 +77,8 @@ impl From<(CompleteTransaction, WalletTransaction, Option<WalletTransaction>)> f
 
 
         ViewTransaction {
+            type_name: item.type_name,
+            type_id: item.type_id,
             transaction_id: sold.transaction_id,
             date_time: sold.date.format("%v %T").to_string(),
             is_buy_text: String::from(if sold.is_buy { "B" } else { "S" } ),

@@ -29,7 +29,7 @@
                 {% else %}
                     <td class="center green">{{ transaction.is_buy_text }}</td>
                 {% endif %}
-                <td class="center">Zartuks' overloaded invulnerability shield adapter</td>
+                <td class="left">{{ transaction.type_name }}</td>
                 <td class="center">{{transaction.quantity}}</td>
                 <td class="right">{{transaction.unit_price}}</td>
                 {% if transaction.is_buy_text == "B" %}<td class="right red">-{{transaction.profit}}</td>

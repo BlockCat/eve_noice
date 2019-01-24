@@ -22,6 +22,13 @@ table! {
 }
 
 table! {
+    inv_types (type_id) {
+        type_id -> Integer,
+        type_name -> Text,
+    }
+}
+
+table! {
     transaction_queues (character_id, transaction_id) {
         character_id -> Integer,
         type_id -> Integer,
@@ -48,12 +55,15 @@ table! {
 
 joinable!(complete_transactions -> eve_characters (character_id));
 joinable!(transaction_queues -> eve_characters (character_id));
+joinable!(transaction_queues -> inv_types (type_id));
 joinable!(transaction_queues -> wallet_transactions (transaction_id));
 joinable!(wallet_transactions -> eve_characters (character_id));
+joinable!(wallet_transactions -> inv_types (type_id));
 
 allow_tables_to_appear_in_same_query!(
     complete_transactions,
     eve_characters,
+    inv_types,
     transaction_queues,
     wallet_transactions,
 );

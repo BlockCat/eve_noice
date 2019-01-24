@@ -1,6 +1,7 @@
 use chrono::NaiveDateTime;
 use crate::esi::EsiWalletTransaction;
 use crate::schema::wallet_transactions;
+use crate::models::InvType;
 
 #[derive(Identifiable, Queryable, Insertable, Debug, Serialize)]
 #[primary_key(transaction_id)]
@@ -36,16 +37,14 @@ impl WalletTransaction {
         }
     }
 
-    pub fn all_buy(character_tid: i32, conn: &crate::EveDatabase) -> diesel::QueryResult<Vec<Self>> {
+    pub fn all_buy(character_tid: i32, conn: &crate::EveDatabase) -> diesel::QueryResult<Vec<(Self, InvType)>> {
+        use diesel::prelude::*;
         use crate::schema::wallet_transactions::dsl::*;
-        use diesel::QueryDsl;
-        use diesel::RunQueryDsl;
-        use diesel::BoolExpressionMethods;
-        use diesel::ExpressionMethods;
-        
+        use crate::schema::inv_types::dsl::{inv_types, type_id as inv_type_id};
 
         wallet_transactions.filter(character_id.eq(character_tid).and(is_buy.eq(true)))
             .limit(50)
+            .inner_join(inv_types.on(type_id.eq(inv_type_id)))
             .load(&conn.0)
     }   
     
