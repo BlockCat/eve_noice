@@ -6,12 +6,14 @@
             table th + th  { border-left:1px solid black; }
             table th  { border-bottom:1px solid black; }
             table, th, td { padding: 3px; }
+            table tr:nth-child(even) { background: #ECECEA; }
             td.right { text-align: right; }
             td.center { text-align: center; }
             td.left { text-align: left; }
             td.red { color: #A8000C; background: #FFBABA; }
             td.darkred { color: #00000C; background: #FF4343; }
             td.green { color: #00330C; background: #BAFFBA; }
+            div.content { margin: auto; width: 70%; }
         </style>
     </head>
     <body>        

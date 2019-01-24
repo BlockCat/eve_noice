@@ -79,14 +79,14 @@ pub fn update(eve_character: EveCharacter, mut client: auth::AuthedClient, db: E
     println!("Retrieved transactions");
     
     let esi_transactions: Vec<_> = esi_transactions.into_iter()
-        .take_while(|x| x.date > latest_transaction_date)
+        .take_while(|x| x.date > latest_transaction_date)        
         .map(|x| {
             let taxes = if x.is_buy {
                 x.unit_price * 0.026
             } else {
                 x.unit_price * 0.038
             };
-                        
+
             WalletTransaction::new(eve_character.id, x, taxes)
         })
         .collect();

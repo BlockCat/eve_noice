@@ -7,7 +7,8 @@
         <a href="/characters/logout">Logout</a>
     </nav>
     <h1>Welcome: {{ character_name }}</h1>    
-    <h2>Sold transactions</h2>
+    <h2>Sold transactions in past 7 days</h2>
+    <a href="?days=5">5 days</a> | <a href="?days=7"> 7 days </a> | <a href="?days=14"> 14 days </a> | <a href="?days=30"> 30 days </a>
     <table>
         <thead>
             <th>Date</th>
@@ -41,6 +42,34 @@
                 <td class="left">{{transaction.time_span}}</td>
             </tr>
         {% endfor %}
+        </tbody>
+    </table>
+
+    <h2 id="stats">Statistics for past 7 days</h2>
+    <a href="?days=5#stats">5 days</a> | <a href="?days=7#stats"> 7 days </a> | <a href="?days=14"> 14 days </a> | <a href="?days=30"> 30 days </a>
+    <table>
+        <thead>
+            <th>Date</th>
+            <th>ISK Buy</th>
+            <th>ISK Sell</th>
+            <th>Taxes</th>
+            <th>Profit</th>            
+        </thead>
+        <tbody>
+        </tbody>
+    </table>
+
+
+    <h2>Most profitable items for past 7 days</h2>
+    <a href="?profit_days=5">5 days</a> | <a href="?profit_days=7"> 7 days </a> | <a href="?profit_days=14"> 14 days </a> | <a href="?profit_days=30"> 30 days </a>
+    <table>
+        <thead>
+            <th>Item</th>
+            <th>Profit</th>
+            <th>avg. time</th>
+            <th>Profit/day</th>                     
+        </thead>
+        <tbody>
         </tbody>
     </table>
 
