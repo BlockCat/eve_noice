@@ -4,9 +4,9 @@ table! {
         buy_transaction_id -> Nullable<BigInt>,
         sell_transaction_id -> BigInt,
         bought_unit_price -> Nullable<Float>,
-        bought_taxes -> Nullable<Float>,
+        bought_unit_taxes -> Nullable<Float>,
         sold_unit_price -> Float,
-        sold_taxes -> Float,
+        sold_unit_taxes -> Float,
         amount -> Integer,
     }
 }
@@ -42,7 +42,7 @@ table! {
         quantity -> Integer,
         type_id -> Integer,
         unit_price -> Float,
-        taxes -> Float,
+        unit_taxes -> Float,
     }
 }
 

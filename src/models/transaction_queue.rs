@@ -1,7 +1,5 @@
-use diesel::QueryDsl;
-use diesel::ExpressionMethods;
-use diesel::RunQueryDsl;
-use diesel::BoolExpressionMethods;
+use diesel::prelude::*;
+use crate::models::WalletTransaction;
 use crate::schema::transaction_queues;
 
 #[derive(Identifiable, Queryable, Insertable, Debug, Serialize)]
@@ -25,10 +23,12 @@ impl TransactionQueue {
     }
     upsert!(transaction_queues);
 
-    pub fn find_latest(character_tid: i32, type_tid: i32, conn: &crate::EveDatabase) -> diesel::QueryResult<Self> {
+    pub fn find_latest(character_tid: i32, type_tid: i32, conn: &crate::EveDatabase) -> diesel::QueryResult<(Self, Option<WalletTransaction>)> {
         use crate::schema::transaction_queues::dsl::*;
+        use crate::schema::wallet_transactions::dsl::{wallet_transactions, transaction_id as buy_transaction};
         transaction_queues.filter(character_id.eq(character_tid).and(type_id.eq(type_tid)).and(amount_left.gt(0)))
             .order(transaction_id.desc())
+            .left_join(wallet_transactions.on(transaction_id.eq(buy_transaction)))
             .first(&conn.0)
     }
 

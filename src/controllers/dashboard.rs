@@ -81,8 +81,12 @@ pub fn update(eve_character: EveCharacter, mut client: auth::AuthedClient, db: E
     let esi_transactions: Vec<_> = esi_transactions.into_iter()
         .take_while(|x| x.date > latest_transaction_date)
         .map(|x| {
-            let taxes = 0.0;
-            panic!("Taxes not yet implemented");
+            let taxes = if x.is_buy {
+                x.unit_price * 0.026
+            } else {
+                x.unit_price * 0.038
+            };
+                        
             WalletTransaction::new(eve_character.id, x, taxes)
         })
         .collect();
@@ -105,14 +109,14 @@ pub fn update(eve_character: EveCharacter, mut client: auth::AuthedClient, db: E
         let mut quantity_left = transaction.quantity;
         // While there is a quantity left that needs to be processed
         while quantity_left > 0 {
-            println!("Quantity left: {}", quantity_left);
+            print!("Quantity left: {}, ", quantity_left);
             // Take first transaction in the queue of the type that has a quantity left.
             let latest = TransactionQueue::find_latest(eve_character.id, transaction.type_id, &db).ok();
 
-            println!("Latest? : {:?}", latest);
+            println!("latest: {:?}", latest);
 
             // If that transaction actually exists:
-            let (buy_transaction, quantity) = if let Some(mut latest) = latest {
+            let (buy_transaction, quantity) = if let Some((mut latest, buy_transaction)) = latest {
                 // The quantity take from this queue can not be more than quantity left.
                 let quantity_taken = std::cmp::min(quantity_left, latest.amount_left);
                 
@@ -126,7 +130,7 @@ pub fn update(eve_character: EveCharacter, mut client: auth::AuthedClient, db: E
                     latest.delete(&db).expect("Could not delete from transaction queue");
                 }
                 
-                (Some(latest), quantity_taken)
+                (buy_transaction, quantity_taken)
             } else {
                 // No latest transaction, this sell order is problematic :thinking:
                 (None, quantity_left)

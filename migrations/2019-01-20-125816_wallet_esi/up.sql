@@ -9,7 +9,7 @@ CREATE TABLE wallet_transactions (
     quantity INTEGER NOT NULL,
     type_id INTEGER NOT NULL,
     unit_price REAL NOT NULL,
-    taxes REAL NOT NULL,
+    unit_taxes REAL NOT NULL,
     FOREIGN KEY (character_id) REFERENCES eve_characters(id)
 );
 
@@ -28,9 +28,9 @@ CREATE TABLE complete_transactions (
     buy_transaction_id BIGINT,
     sell_transaction_id BIGINT NOT NULL,
     bought_unit_price REAL,
-    bought_taxes REAL,
+    bought_unit_taxes REAL,
     sold_unit_price REAL NOT NULL,
-    sold_taxes REAL NOT NULL,
+    sold_unit_taxes REAL NOT NULL,
     amount INTEGER NOT NULL,    
     FOREIGN KEY (character_id) REFERENCES eve_characters(id),
     FOREIGN KEY (buy_transaction_id) REFERENCES wallet_transactions(transaction_id),

@@ -36,6 +36,7 @@ pub struct ViewTransaction {
 impl From<WalletTransaction> for ViewTransaction {
     fn from(transaction: WalletTransaction) -> Self {
         let total_price = transaction.unit_price * transaction.quantity as f32;
+        let total_taxes = transaction.unit_taxes * transaction.quantity as f32;
         ViewTransaction {
             transaction_id: transaction.transaction_id,
             date_time: transaction.date.format("%v %T").to_string(),
@@ -43,7 +44,7 @@ impl From<WalletTransaction> for ViewTransaction {
             quantity: transaction.quantity,
             unit_price: transaction.unit_price.separated_string_with_fixed_place(2),
             total_price: total_price.separated_string_with_fixed_place(2),
-            profit: (if transaction.is_buy { -total_price * 0.026 } else { total_price * 0.038 }).separated_string_with_fixed_place(2),
+            profit: total_taxes.separated_string_with_fixed_place(2),
             markup_percentage: String::from(""),
             time_span: String::from("")
         }
