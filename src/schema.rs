@@ -3,8 +3,11 @@ table! {
         character_id -> Integer,
         buy_transaction_id -> Nullable<BigInt>,
         sell_transaction_id -> BigInt,
+        bought_unit_price -> Nullable<Float>,
+        bought_taxes -> Nullable<Float>,
+        sold_unit_price -> Float,
+        sold_taxes -> Float,
         amount -> Integer,
-        taxes -> Float,
     }
 }
 
@@ -39,6 +42,7 @@ table! {
         quantity -> Integer,
         type_id -> Integer,
         unit_price -> Float,
+        taxes -> Float,
     }
 }
 

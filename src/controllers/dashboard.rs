@@ -80,7 +80,11 @@ pub fn update(eve_character: EveCharacter, mut client: auth::AuthedClient, db: E
     
     let esi_transactions: Vec<_> = esi_transactions.into_iter()
         .take_while(|x| x.date > latest_transaction_date)
-        .map(|x| WalletTransaction::new(eve_character.id, x))
+        .map(|x| {
+            let taxes = 0.0;
+            panic!("Taxes not yet implemented");
+            WalletTransaction::new(eve_character.id, x, taxes)
+        })
         .collect();
 
     WalletTransaction::upsert_batch(&db, &esi_transactions).expect("Could not update the database");
@@ -134,10 +138,7 @@ pub fn update(eve_character: EveCharacter, mut client: auth::AuthedClient, db: E
             // Ehm, something about creating a new Finished Transaction
             // Probably means that sell transactions don't need to be added to the database
 
-            let complete_transaction = CompleteTransaction::new(
-                eve_character.id,
-                buy_transaction.map(|x| x.transaction_id), 
-                transaction.transaction_id, quantity, 0.0);
+            let complete_transaction = CompleteTransaction::new(eve_character.id, buy_transaction, transaction, quantity);
             complete_transaction.upsert(&db).expect("Could not insert complete transaction into database.");
         }
         

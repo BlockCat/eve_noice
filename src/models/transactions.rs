@@ -14,12 +14,13 @@ pub struct WalletTransaction {
     pub location_id: i64,
     pub quantity: i32,
     pub type_id: i32,
-    pub unit_price: f32
+    pub unit_price: f32,
+    pub taxes: f32,
 }
 
 impl WalletTransaction {
 
-    pub fn new(character_id: i32, transaction: EsiWalletTransaction) -> Self {
+    pub fn new(character_id: i32, transaction: EsiWalletTransaction, taxes: f32) -> Self {
         WalletTransaction {
             transaction_id: transaction.transaction_id,
             character_id: character_id,
@@ -30,7 +31,8 @@ impl WalletTransaction {
             location_id: transaction.location_id,
             quantity: transaction.quantity,
             type_id: transaction.type_id,
-            unit_price: transaction.unit_price
+            unit_price: transaction.unit_price,
+            taxes: taxes,
         }
     }
 
