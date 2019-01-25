@@ -20,6 +20,12 @@ impl DashboardViewModel {
 }
 
 #[derive(Serialize)]
+pub struct ViewProfit {
+    date_time: String,
+    
+}
+
+#[derive(Serialize)]
 pub struct ViewTransaction {
     type_name: String,
     type_id: i32,
@@ -74,7 +80,7 @@ impl From<(CompleteTransaction, WalletTransaction, InvType, Option<WalletTransac
         });
         
         let profit = complete.amount as f32 * (sold.unit_price - bought_price);
-
+        let sold_taxes = sold.unit_taxes * complete.amount as f32;
 
         ViewTransaction {
             type_name: item.type_name,
@@ -85,7 +91,7 @@ impl From<(CompleteTransaction, WalletTransaction, InvType, Option<WalletTransac
             quantity: complete.amount,
             unit_price: sold.unit_price.separated_string_with_fixed_place(2),
             total_price: (sold.unit_price * complete.amount as f32).separated_string_with_fixed_place(2),
-            profit: (profit - bought_taxes - 0.038 * profit ).separated_string_with_fixed_place(2),
+            profit: (profit - bought_taxes - sold_taxes ).separated_string_with_fixed_place(2),
             markup_percentage: ((sold.unit_price / bought_price - 1.0) * 100.0).separated_string_with_fixed_place(2),
             time_span: String::from(bought_date)
         }

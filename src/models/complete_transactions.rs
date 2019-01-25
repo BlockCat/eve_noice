@@ -34,7 +34,20 @@ impl CompleteTransaction {
         }
     }
 
-    pub fn all(character_tid: i32, conn: &EveDatabase) -> diesel::QueryResult<Vec<(CompleteTransaction, WalletTransaction, InvType, Option<WalletTransaction>)>> {
+    /*pub fn all_profit(character_tid: i32, days: i32, conn: &EveDatabase) -> diesel::QueryResult<Vec<(?)>> {
+        use itertools::GroupBy;
+        let result = CompleteTransaction::all(character_tid, days, conn).expect("Could not get completed transactions");
+
+        result.into_iter()
+            .group_by(|x| x.1.date.date())
+            .
+
+
+        
+        // Now group by date
+    }*/
+
+    pub fn all(character_tid: i32, days: i32, conn: &EveDatabase) -> diesel::QueryResult<Vec<(CompleteTransaction, WalletTransaction, InvType, Option<WalletTransaction>)>> {
         use diesel::prelude::*;
         use crate::schema::wallet_transactions::dsl::{ transaction_id, wallet_transactions, type_id};        
         use crate::schema::inv_types::dsl::{inv_types, type_id as inv_type_id};

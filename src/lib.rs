@@ -17,6 +17,7 @@ extern crate jwt;
 extern crate ammonia;
 extern crate restson;
 extern crate separator;
+extern crate itertools;
 
 pub mod models;
 pub mod schema;

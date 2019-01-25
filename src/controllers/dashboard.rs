@@ -19,7 +19,7 @@ pub fn dashboard(eve_character: EveCharacter, db: EveDatabase) -> Template {
         .into_iter()
         .map(|x| x.into())
         .chain(
-            CompleteTransaction::all(eve_character.id, &db)
+            CompleteTransaction::all(eve_character.id, 5, &db)
                 .expect("Could not get complete transactions")
                 .into_iter()
                 .map(|x| x.into())
