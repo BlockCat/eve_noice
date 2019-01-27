@@ -14,19 +14,18 @@ use crate::view_models::DashboardViewModel;
 #[get("/")]
 pub fn dashboard(eve_character: EveCharacter, db: EveDatabase) -> Template {
 
-    let bought = WalletTransaction::all_buy(eve_character.id, &db)
-        .expect("Could not get all bought transactions of character")
-        .into_iter()
+    let sold = crate::repository::view_transactions(eve_character.id, 7, &db).expect("Could not get transactions");
+
+    println!("Hey");
+    let sold = sold.into_iter()
         .map(|x| x.into())
-        .chain(
-            CompleteTransaction::all(eve_character.id, 5, &db)
-                .expect("Could not get complete transactions")
-                .into_iter()
-                .map(|x| x.into())
-        ).collect();
+        .collect();
+    println!("Hoi");
+
+    let per_day = crate::repository::view_profit_per_day(eve_character.id, 7, &db);
         
     Template::render("dashboard/dashboard", DashboardViewModel::new(
-        eve_character.name, bought
+        eve_character.name, sold, per_day
     ))
 }
 

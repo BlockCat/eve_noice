@@ -94,5 +94,6 @@ pub use self::evecharacter::EveCharacter;
 pub use self::transactions::WalletTransaction;
 pub use self::transaction_queue::TransactionQueue;
 pub use self::complete_transactions::CompleteTransaction;
+pub use self::complete_transactions::CompleteTransactionView;
 pub use self::invtype::InvType;
 

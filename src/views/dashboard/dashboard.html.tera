@@ -16,6 +16,7 @@
             <th>Item</th>
             <th>Quantity</th>
             <th>Unit price</th>
+            <th>Taxes</th>
             <th>Profit</th>
             <th>%</th>
             <th></th>
@@ -32,7 +33,9 @@
                 <td class="left">{{ transaction.type_name }}</td>
                 <td class="center">{{transaction.quantity}}</td>
                 <td class="right">{{transaction.unit_price}}</td>
-                {% if transaction.is_buy_text == "B" %}<td class="right red">-{{transaction.profit}}</td>
+                <td class="right">{{transaction.taxes}}</td>
+                {% if transaction.is_buy_text == "B" %}
+                <td class="right red">-{{transaction.profit}}</td>
                 {% else %}
                 <td class="right green">{{transaction.profit}}</td>
                 {% endif %}                
@@ -50,10 +53,21 @@
             <th>Date</th>
             <th>ISK Buy</th>
             <th>ISK Sell</th>
+            <th>Revenue</th>
             <th>Taxes</th>
             <th>Profit</th>            
         </thead>
         <tbody>
+        {% for day in per_day %}
+            <tr>
+                <td>{{day.date}}</td>
+                <td class="right">{{day.isk_buy}}</td>
+                <td class="right">{{day.isk_sell}}</td>
+                <td class="right">{{day.revenue}}</td>
+                <td class="right">{{day.taxes}}</td>
+                <td class="right">{{day.profit}}</td>
+            </tr>
+        {% endfor %}
         </tbody>
     </table>
 

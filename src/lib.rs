@@ -22,6 +22,7 @@ extern crate itertools;
 pub mod models;
 pub mod schema;
 pub mod view_models;
+pub mod repository;
 
 mod auth;
 mod esi;
@@ -47,3 +48,22 @@ pub fn rocket_factory() -> Result<rocket::Rocket, String> {
 
     Ok(rocket)
 }
+
+table! {
+    complete_transactions_views (sell_transaction_id, buy_transaction_id) {
+        type_name -> Text,
+        type_id -> Integer,
+        character_id -> Integer,
+        sell_transaction_id -> BigInt,
+        buy_transaction_id -> Nullable<BigInt>,
+        sell_date -> Timestamp,
+        buy_date -> Nullable<Timestamp>,
+        is_buy -> Bool,
+        quantity -> Integer,
+        buy_unit_price -> Nullable<Float>,
+        buy_unit_tax -> Nullable<Float>,
+        sell_unit_price -> Float,
+        sell_unit_tax -> Float,        
+        
+    }
+ }

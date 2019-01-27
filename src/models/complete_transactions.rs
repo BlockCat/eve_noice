@@ -1,7 +1,7 @@
-use crate::EveDatabase;
 use crate::schema::complete_transactions;
+use chrono::NaiveDateTime;
 
-use crate::models::{ WalletTransaction, InvType };
+use crate::models::WalletTransaction;
 
 #[derive(Identifiable, Queryable, Insertable, Debug, Serialize)]
 #[primary_key(buy_transaction_id, sell_transaction_id)]
@@ -14,6 +14,23 @@ pub struct CompleteTransaction {
     pub sold_unit_price: f32,
     pub sold_unit_taxes: f32,
     pub amount: i32    
+}
+
+#[derive(Queryable, Debug, Serialize)]
+pub struct CompleteTransactionView {
+    pub type_name: String,
+    pub type_id: i32,
+    pub character_id: i32,
+    pub sell_transaction_id: i64,
+    pub buy_transaction_id: Option<i64>,
+    pub sell_date: NaiveDateTime,
+    pub buy_date: Option<NaiveDateTime>,
+    pub is_buy: bool,
+    pub quantity: i32,
+    pub buy_unit_price: Option<f32>,
+    pub buy_unit_tax: Option<f32>,
+    pub sell_unit_price: f32,
+    pub sell_unit_tax: f32
 }
 
 impl CompleteTransaction {
@@ -34,20 +51,7 @@ impl CompleteTransaction {
         }
     }
 
-    /*pub fn all_profit(character_tid: i32, days: i32, conn: &EveDatabase) -> diesel::QueryResult<Vec<(?)>> {
-        use itertools::GroupBy;
-        let result = CompleteTransaction::all(character_tid, days, conn).expect("Could not get completed transactions");
-
-        result.into_iter()
-            .group_by(|x| x.1.date.date())
-            .
-
-
-        
-        // Now group by date
-    }*/
-
-    pub fn all(character_tid: i32, days: i32, conn: &EveDatabase) -> diesel::QueryResult<Vec<(CompleteTransaction, WalletTransaction, InvType, Option<WalletTransaction>)>> {
+    /*pub fn all(character_tid: i32, days: i32, conn: &EveDatabase) -> diesel::QueryResult<Vec<(CompleteTransaction, WalletTransaction, InvType, Option<WalletTransaction>)>> {
         use diesel::prelude::*;
         use crate::schema::wallet_transactions::dsl::{ transaction_id, wallet_transactions, type_id};        
         use crate::schema::inv_types::dsl::{inv_types, type_id as inv_type_id};
@@ -70,7 +74,7 @@ impl CompleteTransaction {
             .map(|(sell, buy)| {
                 (sell.0, sell.1, sell.2, buy.1)
             }).collect())        
-    }
+    }*/
 
     upsert!(complete_transactions);
 }
