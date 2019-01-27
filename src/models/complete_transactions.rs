@@ -51,30 +51,5 @@ impl CompleteTransaction {
         }
     }
 
-    /*pub fn all(character_tid: i32, days: i32, conn: &EveDatabase) -> diesel::QueryResult<Vec<(CompleteTransaction, WalletTransaction, InvType, Option<WalletTransaction>)>> {
-        use diesel::prelude::*;
-        use crate::schema::wallet_transactions::dsl::{ transaction_id, wallet_transactions, type_id};        
-        use crate::schema::inv_types::dsl::{inv_types, type_id as inv_type_id};
-        use crate::schema::complete_transactions::dsl::*;
-
-        let sells:Vec<(CompleteTransaction, WalletTransaction, InvType)> = 
-            complete_transactions
-            .filter(character_id.eq(character_tid))            
-            .inner_join(wallet_transactions.on(transaction_id.eq(sell_transaction_id)))            
-            .inner_join(inv_types.on(type_id.eq(inv_type_id)))
-            .load(&conn.0).expect("Could not get sell transactions for complete transactions");
-
-        let buys: Vec<(CompleteTransaction, Option<WalletTransaction>)> = 
-            complete_transactions
-            .filter(character_id.eq(character_tid))            
-            .left_join(wallet_transactions.on(buy_transaction_id.eq(transaction_id.nullable())))
-            .load(&conn.0).expect("Could not get buy transactions for complete transactions");
-
-        Ok(sells.into_iter().zip(buys.into_iter())
-            .map(|(sell, buy)| {
-                (sell.0, sell.1, sell.2, buy.1)
-            }).collect())        
-    }*/
-
     upsert!(complete_transactions);
 }

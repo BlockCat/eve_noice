@@ -32,18 +32,24 @@ pub struct ViewTransaction {
     type_name: String,
     type_id: i32,
     transaction_id: i64,
-    date_time: String,
+    date_time: chrono::NaiveDateTime,
     is_buy_text: String,
     quantity: i32,
-    unit_price: String,    
-    taxes: String,
-    profit: String,
+    unit_price: f32,    
+    taxes: f32,
+    profit: f32,
     markup_percentage: String,
     time_span: String,
 }
 
 impl From<CompleteTransactionView> for ViewTransaction {
     fn from(transaction: CompleteTransactionView) -> Self {
+        (&transaction).into()
+    }
+}
+
+impl From<&CompleteTransactionView> for ViewTransaction {
+    fn from(transaction: &CompleteTransactionView) -> Self {
 
         let buy_text = if transaction.is_buy { String::from("B")} else { String::from("S") };
 
@@ -63,7 +69,7 @@ impl From<CompleteTransactionView> for ViewTransaction {
 
         // Reminder that if this is a buy transaction, then the transaction information is stored in the sell parts
         let (profit, taxes, markup) = if transaction.is_buy {
-            let profit = transaction.sell_unit_tax * transaction.quantity as f32;
+            let profit = -transaction.sell_unit_tax * transaction.quantity as f32;
             let taxes = transaction.sell_unit_tax * transaction.quantity as f32;
 
             (profit, taxes, String::from(""))
@@ -78,15 +84,15 @@ impl From<CompleteTransactionView> for ViewTransaction {
         };        
 
         ViewTransaction {
-            type_name: transaction.type_name,
+            type_name: transaction.type_name.clone(),
             type_id: transaction.type_id,
             transaction_id: transaction.sell_transaction_id,
-            date_time: transaction.sell_date.format("%v %T").to_string(),
+            date_time: transaction.sell_date,
             is_buy_text: buy_text,
             quantity: transaction.quantity,
-            unit_price: transaction.sell_unit_price.separated_string_with_fixed_place(2),            
-            taxes: taxes.separated_string_with_fixed_place(2),
-            profit: profit.separated_string_with_fixed_place(2),
+            unit_price: transaction.sell_unit_price,            
+            taxes: taxes,
+            profit: profit,
             markup_percentage: markup,
             time_span: elapsed
         }
@@ -95,10 +101,10 @@ impl From<CompleteTransactionView> for ViewTransaction {
 
 #[derive(Serialize)]
 pub struct DayProfit {
-    pub date: String,
-    pub isk_buy: String,
-    pub isk_sell: String,
-    pub revenue: String,
-    pub taxes: String,    
-    pub profit: String
+    pub date: chrono::NaiveDate,
+    pub isk_buy: f32,
+    pub isk_sell: f32,
+    pub revenue: f32,
+    pub taxes: f32,    
+    pub profit: f32
 }

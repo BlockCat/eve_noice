@@ -1,31 +1,28 @@
+use std::collections::HashMap;
+
 use rocket::Route;
 use rocket::http::Status;
 use rocket::response::Redirect;
 use rocket_contrib::templates::*;
 
-use chrono::{ DateTime, Utc };
+use chrono::{ NaiveDate, DateTime, Utc };
 
 use crate::auth;
 use crate::EveDatabase;
 use crate::esi::EsiWalletTransactions;
-use crate::models::{ EveCharacter, WalletTransaction, TransactionQueue, CompleteTransaction};
-use crate::view_models::DashboardViewModel;
+use crate::models::{ EveCharacter, WalletTransaction, TransactionQueue, CompleteTransaction, CompleteTransactionView };
+use crate::view_models::{ DashboardViewModel, ViewTransaction, DayProfit };
 
 #[get("/")]
 pub fn dashboard(eve_character: EveCharacter, db: EveDatabase) -> Template {
 
-    let sold = crate::repository::view_transactions(eve_character.id, 7, &db).expect("Could not get transactions");
-
-    println!("Hey");
-    let sold = sold.into_iter()
-        .map(|x| x.into())
-        .collect();
-    println!("Hoi");
-
-    let per_day = crate::repository::view_profit_per_day(eve_character.id, 7, &db);
+    let transactions = crate::repository::view_transactions(eve_character.id, 7, &db).expect("Could not get transactions");    
+    
+    let profits = get_transactions_view(&transactions);
+    let per_day = get_profit_per_day(&transactions);
         
     Template::render("dashboard/dashboard", DashboardViewModel::new(
-        eve_character.name, sold, per_day
+        eve_character.name, profits, per_day
     ))
 }
 
@@ -144,4 +141,42 @@ pub fn update_error() -> Status {
 
 pub fn get_routes() -> Vec<Route> {
     routes![index, dashboard, update_error, update]
+}
+
+fn get_transactions_view(transactions: &Vec<CompleteTransactionView>) -> Vec<ViewTransaction> {
+    transactions.iter()
+        .map(|x| x.into())
+        .collect()
+}
+
+fn get_profit_per_day(transactions: &Vec<CompleteTransactionView>) -> Vec<DayProfit> {
+    let mut mapping = HashMap::<NaiveDate, DayProfit>::new();
+
+    // Reminder that if the transaction is buy, it will be saved in sell fields
+    for transaction in transactions {
+        let tdate = transaction.sell_date.date();
+        let entry = mapping.entry(tdate).or_insert(DayProfit {
+            date: tdate,
+            isk_buy: 0.0,
+            isk_sell: 0.0,
+            revenue: 0.0,
+            taxes: 0.0,
+            profit: 0.0
+        });
+        if transaction.is_buy {
+            entry.isk_buy += transaction.sell_unit_price * transaction.quantity as f32;                                    
+        } else {
+            entry.isk_sell += transaction.sell_unit_price * transaction.quantity as f32;
+            entry.taxes += (transaction.sell_unit_tax + transaction.buy_unit_tax.unwrap_or(0.0)) * transaction.quantity as f32;
+            entry.revenue += (transaction.sell_unit_price - transaction.buy_unit_price.unwrap_or(0.0)) * transaction.quantity as f32;                    
+        }
+    }
+
+    for vals in mapping.values_mut() {
+        vals.profit = vals.revenue - vals.taxes;
+    }
+    
+    let mut profit_days: Vec<DayProfit> = mapping.into_iter().map(|x| x.1).collect();
+    profit_days.sort_by_key(|x| std::cmp::Reverse(x.date));
+    profit_days    
 }

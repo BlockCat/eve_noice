@@ -1,5 +1,5 @@
 {% extends "base" %}
-
+{% import "macros" as macros %}
 {% block content %}
     <nav>
         <a href="/update">Update</a> |
@@ -24,7 +24,7 @@
         <tbody>
         {% for transaction in transactions %}
             <tr>
-                <td class="center">{{transaction.date_time}}</td>
+                <td class="center">{{transaction.date_time | date(format="%v %T")}}</td>
                 {% if transaction.is_buy_text == "B" %}
                     <td class="center red">{{ transaction.is_buy_text }}</td>
                 {% else %}
@@ -32,13 +32,9 @@
                 {% endif %}
                 <td class="left">{{ transaction.type_name }}</td>
                 <td class="center">{{transaction.quantity}}</td>
-                <td class="right">{{transaction.unit_price}}</td>
-                <td class="right">{{transaction.taxes}}</td>
-                {% if transaction.is_buy_text == "B" %}
-                <td class="right red">-{{transaction.profit}}</td>
-                {% else %}
-                <td class="right green">{{transaction.profit}}</td>
-                {% endif %}                
+                <td class="right">{{transaction.unit_price | isk}}</td>                
+                <td class="right">{{transaction.taxes | isk}}</td>                
+                {{ macros::isk_td(amount=transaction.profit) }}
                 <td class="center">{{transaction.markup_percentage}}</td>
                 <td class="left">{{transaction.time_span}}</td>
             </tr>
@@ -60,12 +56,12 @@
         <tbody>
         {% for day in per_day %}
             <tr>
-                <td>{{day.date}}</td>
-                <td class="right">{{day.isk_buy}}</td>
-                <td class="right">{{day.isk_sell}}</td>
-                <td class="right">{{day.revenue}}</td>
-                <td class="right">{{day.taxes}}</td>
-                <td class="right">{{day.profit}}</td>
+                <td>{{day.date | date(format="%v")}}</td>
+                <td class="right">{{day.isk_buy | isk}}</td>
+                <td class="right">{{day.isk_sell | isk}}</td>
+                <td class="right">{{day.revenue | isk}}</td>
+                <td class="right">{{day.taxes | isk}}</td>                
+                {{ macros::isk_td(amount=day.profit) }}
             </tr>
         {% endfor %}
         </tbody>

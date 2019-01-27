@@ -1,0 +1,14 @@
+{% macro isk_td(amount) %}
+    {% if amount >= 10000000 %}
+    {% set colour = "great" %}
+    {% elif amount >= 1000000 %}
+    {% set colour = "good" %}
+    {% elif amount >= 0 %}
+    {% set colour = "normal" %}
+    {% elif amount >= -1000000 %}
+    {% set colour = "warning" %}
+    {% else %}
+    {% set colour = "danger" %}
+    {% endif %}
+    <td class="right {{colour}}">{{amount | isk}}</td>
+{% endmacro isk_td %}

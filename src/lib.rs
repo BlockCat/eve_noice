@@ -28,8 +28,10 @@ mod auth;
 mod esi;
 mod controllers;
 
-use rocket_contrib::templates::Template;
+use rocket_contrib::templates::{ Template, Engines };
+use rocket_contrib::templates::tera;
 use rocket_contrib::serve::StaticFiles;
+use std::collections::HashMap;
 
 #[database("eve_db")]
 pub struct EveDatabase(diesel::SqliteConnection);
@@ -38,15 +40,29 @@ pub fn rocket_factory() -> Result<rocket::Rocket, String> {
     // Source environment variable
     dotenv::dotenv().ok();
 
+    let tera = Template::custom(|engines: &mut Engines| {
+        
+        engines.tera.register_filter("isk", isk_filter);
+    });
 
     let rocket = rocket::ignite()
         .attach(EveDatabase::fairing())
-        .attach(Template::fairing())
+        .attach(tera)
         .mount("/", controllers::dashboard::get_routes())
         .mount("/characters", controllers::characters::get_routes())
         .mount("/public", StaticFiles::from("assets"));
 
     Ok(rocket)
+}
+
+fn isk_filter(value: tera::Value, _: HashMap<String, tera::Value>) -> tera::Result<tera::Value> {
+    use separator::FixedPlaceSeparatable;
+    if value.is_f64() {
+        let isk = value.as_f64().unwrap().separated_string_with_fixed_place(2);
+        Ok(isk.into())
+    } else {
+        Err(tera::Error::from(tera::ErrorKind::Msg("Was not an f64".to_owned())))
+    }
 }
 
 table! {

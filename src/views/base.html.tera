@@ -1,6 +1,6 @@
 <html>
     <head>
-        <style>
+        <style>            
             table { border-collapse: collapse; }
             table td + td  { border-left:1px solid black; }
             table th + th  { border-left:1px solid black; }
@@ -9,11 +9,16 @@
             table tr:nth-child(even) { background: #ECECEA; }
             td.right { text-align: right; }
             td.center { text-align: center; }
-            td.left { text-align: left; padding-left: 1em; }
-            td.red { color: #A8000C; background: #FFBABA; }
-            td.darkred { color: #00000C; background: #FF4343; }
-            td.green { color: #00330C; background: #BAFFBA; }
+            td.left { text-align: left; padding-left: 1em; }                        
             div.content { margin: auto; width: 70%; }
+            tr:nth-child(odd) td.danger { color: #00000C; background: #FF4343; }
+            tr:nth-child(even) td.danger { color: #1F000C; background: #FF2323; }
+            tr:nth-child(odd) td.warning {color: #A8000C; background: #FFBABA; }
+            tr:nth-child(even) td.warning {color: #A8000C; background: #FF9A9A; }
+            tr:nth-child(odd) td.good { color: #00330C; background: #BAFFBA; }
+            tr:nth-child(even) td.good { color: #00550C; background: #9AFF9A; }
+            tr:nth-child(odd) td.great { color: #002300; background: #6AFF6A; }
+            tr:nth-child(even) td.great { color: #004300; background: #2AFF2A; }
         </style>
     </head>
     <body>        

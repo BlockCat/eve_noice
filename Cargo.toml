@@ -30,7 +30,7 @@ dotenv = "0.13.0"
 dotenv_codegen = "0.11.0"
 separator = "0.4.0"
 itertools = "0.8.0"
-
+tera = "0.11.20"
 # rocket
 rocket = { git = "https://github.com/SergioBenitez/Rocket.git", branch = "master" }
 rocket_codegen = { git = "https://github.com/SergioBenitez/Rocket.git", branch = "master" }
