@@ -20,7 +20,7 @@ path = "tests/lib.rs"
 
 [features]
 default = ["diesel_sqlite"]
-diesel_default = ["diesel/chrono", "diesel/serde_json", "r2d2"]
+diesel_default = ["diesel/chrono", "diesel/serde_json", "r2d2", "rocket/tls"]
 diesel_sqlite = ["diesel_default", "diesel/sqlite"]
 
 [dependencies]
