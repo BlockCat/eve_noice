@@ -1,6 +1,7 @@
 use rocket::Route;
 use rocket::response::*;
-use rocket::http::{Cookies, Cookie};
+use rocket::http::{Cookies, Cookie, Status};
+use rocket_contrib::templates::*;
 
 use jwt::Token;
 use jwt::header::Header;
@@ -9,20 +10,41 @@ use jwt::claims::Claims;
 use crate::auth;
 use crate::models::EveCharacter;
 use crate::EveDatabase;
+use crate::view_models::CharacterConfigViewModel;
 
-
-
-#[get("/", rank = 2)]
-pub fn index() -> &'static str {
-    "Log in now"
+#[get("/")]
+pub fn index_authed(_character: EveCharacter) -> Redirect {
+    Redirect::to("/dashboard")
 }
 
-
+#[get("/", rank = 2)]
+pub fn index() -> Redirect {
+    Redirect::permanent(uri!("/characters", login))
+}
 
 #[get("/login")]
 pub fn login() -> Redirect {
     let config = auth::create_config();
     Redirect::to(config.authorize_url().as_str().to_owned())
+}
+
+#[get("/config", rank = 2)]
+pub fn config_unauth() -> Status {
+    Status::new(403, "Not authenticated")
+}
+#[get("/config")]
+pub fn config(_character: EveCharacter) -> Template {
+    let view_model = CharacterConfigViewModel {
+        flash: None,
+    };
+    Template::render("characters/config", view_model)
+}
+#[post("/config")]
+pub fn config_post(_character: EveCharacter) -> Template {
+    let view_model = CharacterConfigViewModel {
+        flash: Some("Saved config".to_owned()),
+    };
+    Template::render("characters/config", view_model)
 }
 
 
@@ -80,5 +102,5 @@ pub fn callback(code: String, state: String, conn: EveDatabase, mut cookies: Coo
 }
 
 pub fn get_routes() -> Vec<Route> {
-    routes![index, login, logout, callback]
+    routes![index, index_authed, login, logout, config_unauth, config, config_post, callback]
 }

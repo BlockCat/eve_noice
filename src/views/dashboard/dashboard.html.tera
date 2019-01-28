@@ -4,44 +4,12 @@
     <nav>
         <a href="/update">Update</a> |
         <a href="/">Dashboard</a> |
+        <a href="/characters/config">Config</a> |
         <a href="/characters/logout">Logout</a>
     </nav>
     <h1>Welcome: {{ character_name }}</h1>    
-    <h2>Sold transactions in past {{days}} days</h2>
-    <a href="?days=5">5 days</a> | <a href="?days=7"> 7 days </a> | <a href="?days=14"> 14 days </a> | <a href="?days=30"> 30 days </a>
-    <table>
-        <thead>
-            <th>Date</th>
-            <th>B/S</th>
-            <th>Item</th>
-            <th>Quantity</th>
-            <th>Unit price</th>
-            <th>Taxes</th>
-            <th>Profit</th>
-            <th>%</th>
-            <th></th>
-        </thead>
-        <tbody>
-        {% for transaction in transactions %}
-            <tr>
-                <td class="center">{{transaction.date_time | date(format="%v %T")}}</td>
-                {% if transaction.is_buy_text == "B" %}
-                    <td class="center red">{{ transaction.is_buy_text }}</td>
-                {% else %}
-                    <td class="center green">{{ transaction.is_buy_text }}</td>
-                {% endif %}
-                <td class="left">{{ transaction.type_name }}</td>
-                <td class="center">{{transaction.quantity}}</td>
-                <td class="right">{{transaction.unit_price | isk}}</td>                
-                <td class="right">{{transaction.taxes | isk}}</td>                
-                {{ macros::isk_td(amount=transaction.profit) }}
-                <td class="center">{{transaction.markup_percentage}}</td>
-                <td class="left">{{transaction.time_span | duration}}</td>
-            </tr>
-        {% endfor %}
-        </tbody>
-    </table>
 
+    
     <h2 id="stats">Statistics for past {{days}} days</h2>
     <a href="?days=5#stats">5 days</a> | <a href="?days=7#stats"> 7 days </a> | <a href="?days=14#stats"> 14 days </a> | <a href="?days=30#stats"> 30 days </a>
     <table>
@@ -66,8 +34,40 @@
         {% endfor %}
         </tbody>
     </table>
-
-
+    <h2>Sold transactions in past {{days}} days</h2>
+    <a href="?days=5">5 days</a> | <a href="?days=7"> 7 days </a> | <a href="?days=14"> 14 days </a> | <a href="?days=30"> 30 days </a>
+    <table>
+        <thead>
+            <th>Date</th>
+            <th>B/S</th>
+            <th>Item</th>
+            <th>Quantity</th>
+            <th>Unit price</th>
+            <th>Taxes</th>
+            <th>Profit</th>
+            <th>%</th>
+            <th></th>
+        </thead>
+        <tbody>
+        {% for transaction in transactions %}
+            <tr>
+                <td class="center">{{transaction.date_time | date(format="%v %T")}}</td>                
+                {% if transaction.is_buy_text == "B" %}
+                    <td class="center warning">B</td>
+                {% else %}
+                    <td class="center good">S</td>
+                {% endif %}
+                <td class="left">{{ transaction.type_name }}</td>
+                <td class="center">{{transaction.quantity}}</td>
+                <td class="right">{{transaction.unit_price | isk}}</td>                
+                <td class="right">{{transaction.taxes | isk}}</td>                
+                {{ macros::isk_td(amount=transaction.profit) }}
+                <td class="center">{{transaction.markup_percentage}}</td>
+                <td class="left">{{transaction.time_span | duration}}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
     <h2 id="topprofit">Most profitable items for past {{days}} days</h2>
     <a href="?days=5#topprofit">5 days</a> | <a href="?days=7#topprofit"> 7 days </a> | <a href="?days=14#topprofit"> 14 days </a> | <a href="?days=30#topprofit"> 30 days </a>
     <table>

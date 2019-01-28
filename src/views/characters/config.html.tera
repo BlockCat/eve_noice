@@ -1,0 +1,22 @@
+{% extends "base" %}
+
+{% block content %}
+    <nav>
+        <a href="/update">Update</a> |
+        <a href="/">Dashboard</a> |
+        <a href="/characters/config">Config</a> |
+        <a href="/characters/logout">Logout</a>
+    </nav>
+    <h1>Character config</h1>
+    <p>Configure the sale-taxes, buy-taxes and broker fees here. Very basic, but I don't feel like matching transactions with your journal.</p>
+    {% if flash %}
+    <p>{{ flash }}</p>
+    {% else %}
+    <p>he</p>
+    {% endif %}
+    <form>
+
+    </form>
+
+
+{% endblock content %}

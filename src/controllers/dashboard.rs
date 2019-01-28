@@ -128,40 +128,8 @@ pub fn update(eve_character: EveCharacter, mut client: auth::AuthedClient, db: E
             TransactionQueue::delete_batch(&db, &to_be_deleted).expect("Could not delete from transaction queue");
             CompleteTransaction::upsert_batch(&db, &complete_transactions).expect("Could not insert complete transactions");
             println!();
-            
-            /*
-            // If that transaction actually exists:
-            let (buy_transaction, quantity) = if let Some((mut latest, buy_transaction)) = latest {
-                // The quantity take from this queue can not be more than quantity left.
-                let quantity_taken = std::cmp::min(quantity_left, latest.amount_left);
-                
-                // Process quantity                
-                latest.amount_left -= quantity_taken;
-
-                // Update the latest queue
-                if latest.amount_left > 0 {
-                    latest.upsert(&db).expect("Could not upsert transaction queue");
-                } else {
-                    latest.delete(&db).expect("Could not delete from transaction queue");
-                }
-                
-                (buy_transaction, quantity_taken)
-            } else {
-                // No latest transaction, this sell order is problematic :thinking:
-                (None, quantity_left)
-            };
-            quantity_left -= quantity;
-            // TODO: Fix taxes
-            // Ehm, something about creating a new Finished Transaction
-            // Probably means that sell transactions don't need to be added to the database
-
-            let complete_transaction = CompleteTransaction::new(eve_character.id, buy_transaction, transaction, quantity);
-            complete_transaction.upsert(&db).expect("Could not insert complete transaction into database.");*/
         }
     }
-
-    
-    
 
     // Merge the two into one by
 
