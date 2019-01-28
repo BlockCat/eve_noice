@@ -10,9 +10,8 @@ pub fn create_config() -> Config {
     
     let mut config = Config::new(dotenv!("CLIENT_ID"), dotenv!("CLIENT_SECRET"), dotenv!("EVE_AUTH_URL"), dotenv!("EVE_TOKEN_URL"));
 
-    config = config.add_scope("esi-wallet.read_character_wallet.v1");
-    config = config.add_scope("esi-markets.structure_markets.v1");
-    config = config.add_scope("esi-markets.read_character_orders.v1");
+    config = config.add_scope("esi-wallet.read_character_wallet.v1");   
+    
     println!("{}", dotenv!("EVE_REDIRECT_URL"));
     config = config.set_redirect_url(dotenv!("EVE_REDIRECT_URL"));
     config = config.set_state("1234");
