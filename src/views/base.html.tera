@@ -1,5 +1,6 @@
 <html>
     <head>
+        <title>Noice - profit tracker</title>
         <style>            
             table { border-collapse: collapse; }
             table td + td  { border-left:1px solid black; }

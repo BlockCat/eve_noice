@@ -25,7 +25,7 @@
     <h3>Why do I sometimes get this unauthorized error?</h3>
     <p>Currently on a sqlite database which doesn't support concurrent writes, should probably move this to a proper database. Just refresh for now?</p>
     <h3>Do I seriously need to log out and log in each time I want to switch EVE Characters?</h3>
-    <p>Yep, but maybe if you send me a lot of isk ;)</p>
+    <p>Yep, but maybe if you ask nicely</p>
     <h3>Why are corp wallets not supported?</h3>
     <p>You do station trading with corp wallets? Probably won't implemented.</p>
     <h3>Not even if I send you isk?</h3>

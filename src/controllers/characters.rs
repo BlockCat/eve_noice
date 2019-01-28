@@ -14,7 +14,7 @@ use crate::view_models::CharacterConfigViewModel;
 
 #[get("/")]
 pub fn index_authed(_character: EveCharacter) -> Redirect {
-    Redirect::to("/dashboard")
+    Redirect::to("/")
 }
 
 #[get("/", rank = 2)]

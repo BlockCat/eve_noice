@@ -2,7 +2,7 @@
 {% import "macros" as macros %}
 {% block content %}
     <nav>
-        <a href="/update">Update</a> |
+        <a href="/update">Update</a> Click only once per hour please |
         <a href="/">Dashboard</a> |
         <a href="/characters/config">Config</a> |
         <a href="/characters/logout">Logout</a>
