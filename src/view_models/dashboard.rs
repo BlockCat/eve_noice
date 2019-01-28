@@ -3,20 +3,24 @@ use crate::models::CompleteTransactionView;
 
 #[derive(Serialize)]
 pub struct DashboardViewModel {
+    days: i64,
     character_name: String,
     transactions: Vec<ViewTransaction>,
     per_day: Vec<DayProfit>,
+    type_profits: Vec<TypeProfit>
 }
 
 impl DashboardViewModel {
-    pub fn new(character_name: String, mut transactions: Vec<ViewTransaction>, per_day: Vec<DayProfit>) -> Self {
+    pub fn new(character_name: String, mut transactions: Vec<ViewTransaction>, per_day: Vec<DayProfit>, type_profits: Vec<TypeProfit>, days: i64) -> Self {
         transactions.sort_by_key(|f| {
             std::cmp::Reverse(f.transaction_id)
         });
         DashboardViewModel {
+            days,
             character_name,
             transactions,
-            per_day
+            per_day,
+            type_profits,
         }        
     }
 }
@@ -39,7 +43,7 @@ pub struct ViewTransaction {
     taxes: f32,
     profit: f32,
     markup_percentage: String,
-    time_span: String,
+    time_span: i64,
 }
 
 impl From<CompleteTransactionView> for ViewTransaction {
@@ -54,17 +58,9 @@ impl From<&CompleteTransactionView> for ViewTransaction {
         let buy_text = if transaction.is_buy { String::from("B")} else { String::from("S") };
 
         let elapsed = if let Some(d) = transaction.buy_date {
-            let elapsed = transaction.sell_date - d;
-            let date = (elapsed.num_weeks(), elapsed.num_days(), elapsed.num_hours(), elapsed.num_minutes(), elapsed.num_seconds());
-            match date {
-                (0, 0, 0, 0, a) => format!("{} s", a),
-                (0, 0, 0, a, _) => format!("{} m", a),
-                (0, 0, a, _, _) => format!("{} h", a),
-                (0, a, _, _, _) => format!("{} d", a),
-                (a, _, _, _, _) => format!("{} w", a),                
-            }
+            (transaction.sell_date - d).num_seconds()
         } else {
-            String::from("")
+            -1
         };
 
         // Reminder that if this is a buy transaction, then the transaction information is stored in the sell parts
@@ -107,4 +103,12 @@ pub struct DayProfit {
     pub revenue: f32,
     pub taxes: f32,    
     pub profit: f32
+}
+
+#[derive(Serialize)]
+pub struct TypeProfit {
+    pub item_name: String,
+    pub profit: f32,
+    pub avg_time: i64,
+    pub avg_profit: f32
 }

@@ -23,7 +23,7 @@ impl TransactionQueue {
     }
     upsert!(transaction_queues);
 
-    pub fn find_latest(character_tid: i32, type_tid: i32, bdate: chrono::NaiveDateTime, conn: &crate::EveDatabase) -> diesel::QueryResult<(Self, Option<WalletTransaction>)> {
+    pub fn find_latest(character_tid: i32, type_tid: i32, bdate: chrono::NaiveDateTime, limit: i64, page: i64, conn: &crate::EveDatabase) -> diesel::QueryResult<Vec<(Self, Option<WalletTransaction>)>> {
         use crate::schema::transaction_queues::dsl::*;
         use crate::schema::wallet_transactions::dsl::{wallet_transactions, transaction_id as buy_transaction, date as buy_date};
 
@@ -35,11 +35,23 @@ impl TransactionQueue {
             )
             .order(transaction_id.asc())
             .left_join(wallet_transactions.on(transaction_id.eq(buy_transaction)))
-            .first(&conn.0)
+            .limit(limit)
+            .offset(limit * page)
+            .load(&conn.0)
     }
 
     pub fn delete(&self, conn: &crate::EveDatabase) -> diesel::QueryResult<usize> {
         use crate::schema::transaction_queues::dsl::*;
         diesel::delete(transaction_queues.find((self.character_id, self.transaction_id))).execute(&conn.0)
+    }
+
+    pub fn delete_batch(conn: &crate::EveDatabase, batch: &[TransactionQueue]) -> diesel::QueryResult<usize> {
+        use crate::schema::transaction_queues::dsl::*;
+
+        let batch: Vec<_> = batch.iter().map(|x| x.transaction_id).collect();
+
+        diesel::delete(
+            transaction_queues.filter(transaction_id.eq_any(batch))
+        ).execute(&conn.0)
     }
 }

@@ -43,6 +43,7 @@ pub fn rocket_factory() -> Result<rocket::Rocket, String> {
     let tera = Template::custom(|engines: &mut Engines| {
         
         engines.tera.register_filter("isk", isk_filter);
+        engines.tera.register_filter("duration", duration_filter);
     });
 
     let rocket = rocket::ignite()
@@ -62,6 +63,28 @@ fn isk_filter(value: tera::Value, _: HashMap<String, tera::Value>) -> tera::Resu
         Ok(isk.into())
     } else {
         Err(tera::Error::from(tera::ErrorKind::Msg("Was not an f64".to_owned())))
+    }
+}
+
+fn duration_filter(value: tera::Value, _: HashMap<String, tera::Value>) -> tera::Result<tera::Value> {    
+    if value.is_i64() {
+        let duration = value.as_i64().unwrap();
+        if duration >= 0 {
+            let elapsed = chrono::Duration::seconds(duration);
+            let date = (elapsed.num_weeks(), elapsed.num_days(), elapsed.num_hours(), elapsed.num_minutes(), elapsed.num_seconds());
+            let formatted = match date {
+                (0, 0, 0, 0, a) => format!("{} s", a),
+                (0, 0, 0, a, _) => format!("{} m", a),
+                (0, 0, a, _, _) => format!("{} h", a),
+                (0, a, _, _, _) => format!("{} d", a),
+                (a, _, _, _, _) => format!("{} w", a),                
+            };
+            Ok(formatted.into())
+        } else {
+            Ok("".into())
+        }
+    } else {
+        Err(tera::Error::from(tera::ErrorKind::Msg("Was not an i64".to_owned())))
     }
 }
 

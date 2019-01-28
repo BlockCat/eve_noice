@@ -1,10 +1,7 @@
-use crate::models::{ CompleteTransactionView, WalletTransaction};
-use separator::FixedPlaceSeparatable;
-use crate::view_models::DayProfit;
+use crate::models::CompleteTransactionView;
 use crate::EveDatabase;
-use std::collections::HashMap;
 use diesel::prelude::*;
-use chrono::{ NaiveDateTime, NaiveTime, NaiveDate };
+use chrono::{ NaiveDateTime, NaiveTime};
 
 pub fn view_transactions(character_tid: i32, days: i64, conn: &EveDatabase) -> QueryResult<Vec<CompleteTransactionView>> {
     use crate::complete_transactions_views::dsl::*;    

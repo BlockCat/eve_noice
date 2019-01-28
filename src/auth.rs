@@ -13,6 +13,7 @@ pub fn create_config() -> Config {
     config = config.add_scope("esi-wallet.read_character_wallet.v1");
     config = config.add_scope("esi-markets.structure_markets.v1");
     config = config.add_scope("esi-markets.read_character_orders.v1");
+    println!("{}", dotenv!("EVE_REDIRECT_URL"));
     config = config.set_redirect_url(dotenv!("EVE_REDIRECT_URL"));
     config = config.set_state("1234");
     

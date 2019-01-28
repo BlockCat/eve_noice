@@ -11,8 +11,8 @@
             td.center { text-align: center; }
             td.left { text-align: left; padding-left: 1em; }                        
             div.content { margin: auto; width: 70%; }
-            tr:nth-child(odd) td.danger { color: #00000C; background: #FF4343; }
-            tr:nth-child(even) td.danger { color: #1F000C; background: #FF2323; }
+            tr:nth-child(odd) td.danger { color: #00000C; background: #FF5353; }
+            tr:nth-child(even) td.danger { color: #1F000C; background: #FF4343; }
             tr:nth-child(odd) td.warning {color: #A8000C; background: #FFBABA; }
             tr:nth-child(even) td.warning {color: #A8000C; background: #FF9A9A; }
             tr:nth-child(odd) td.good { color: #00330C; background: #BAFFBA; }

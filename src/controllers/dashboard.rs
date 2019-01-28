@@ -11,18 +11,22 @@ use crate::auth;
 use crate::EveDatabase;
 use crate::esi::EsiWalletTransactions;
 use crate::models::{ EveCharacter, WalletTransaction, TransactionQueue, CompleteTransaction, CompleteTransactionView };
-use crate::view_models::{ DashboardViewModel, ViewTransaction, DayProfit };
+use crate::view_models::{ DashboardViewModel, ViewTransaction, DayProfit, TypeProfit };
 
-#[get("/")]
-pub fn dashboard(eve_character: EveCharacter, db: EveDatabase) -> Template {
+#[get("/?<days>")]
+pub fn dashboard(eve_character: EveCharacter, db: EveDatabase, days: Option<i64>) -> Template {
+    use std::cmp::{ max, min };
+    let days = min(30, days.unwrap_or(7));
+    let days = max(0, days);
 
-    let transactions = crate::repository::view_transactions(eve_character.id, 7, &db).expect("Could not get transactions");    
+    let transactions = crate::repository::view_transactions(eve_character.id, days, &db).expect("Could not get transactions");    
     
     let profits = get_transactions_view(&transactions);
     let per_day = get_profit_per_day(&transactions);
+    let type_profit = get_max_profits(&transactions);
         
     Template::render("dashboard/dashboard", DashboardViewModel::new(
-        eve_character.name, profits, per_day
+        eve_character.name, profits, per_day, type_profit, days
     ))
 }
 
@@ -54,11 +58,10 @@ pub fn update(eve_character: EveCharacter, mut client: auth::AuthedClient, db: E
             esi_transactions.extend(new_transactions);        
         } else {
             break;
-        }        
+        }
     }
-
     // ----------------------------------------------------    
-
+    println!("Retrieved esi_transactions");
     // Collect into map
     let esi_transactions: Vec<_> = esi_transactions.into_iter()
         .take_while(|x| x.date > latest_transaction_date)        
@@ -70,12 +73,11 @@ pub fn update(eve_character: EveCharacter, mut client: auth::AuthedClient, db: E
             };
 
             WalletTransaction::new(eve_character.id, x, taxes)
-        })
-        .collect();
+        }).collect();
 
     WalletTransaction::upsert_batch(&db, &esi_transactions).expect("Could not update the database");
 
-    println!("Inserted transaction in database");
+    println!("Inserted esi_transactions");
 
     let transaction_queue = esi_transactions.iter()
         .filter(|x| x.is_buy)
@@ -84,19 +86,50 @@ pub fn update(eve_character: EveCharacter, mut client: auth::AuthedClient, db: E
 
     TransactionQueue::upsert_batch(&db, &transaction_queue).expect("Could not insert bought into queue");
 
-    println!("Inserted into bought queue");
-
+    println!("Inserted into queue");
+    
     for transaction in esi_transactions.iter().rev().filter(|x| !x.is_buy) {
+        print!("Starting transaction, ");
         // Now take it from queue
         let mut quantity_left = transaction.quantity;
+        let mut to_be_upserted = Vec::new();
+        let mut to_be_deleted = Vec::new();
+        let mut complete_transactions = Vec::new();
+        let mut page = 0;
         // While there is a quantity left that needs to be processed
         while quantity_left > 0 {
-            print!("Quantity left: {}, ", quantity_left);
+            print!("quantity left: {}, ", quantity_left);
             // Take first transaction in the queue of the type that has a quantity left.
-            let latest = TransactionQueue::find_latest(eve_character.id, transaction.type_id, transaction.date, &db).ok();
+            let latest = TransactionQueue::find_latest(eve_character.id, transaction.type_id, transaction.date, 20, page, &db).expect("Could not get latest transacations");
+            print!("latests: {}", latest.len());
+            if latest.len() > 0 {
+                for (mut latest, buy_transaction) in latest {
+                    let quantity_taken = std::cmp::min(quantity_left, latest.amount_left);
+                    latest.amount_left -= quantity_taken;
 
-            println!("latest: {:?}", latest);
+                    if latest.amount_left > 0 {
+                        to_be_upserted.push(latest); // Add to transactions needed to be upsert
+                    } else { 
+                        to_be_deleted.push(latest); // Add to transactions needed to be deleted
+                    }
 
+                    quantity_left -= quantity_taken;
+                    complete_transactions.push(CompleteTransaction::new(eve_character.id, buy_transaction, transaction, quantity_taken));
+                }
+            } else {
+
+                // Set quantity to 0
+                complete_transactions.push(CompleteTransaction::new(eve_character.id, None, transaction, quantity_left));
+                quantity_left = 0;
+            }
+
+            page += 1;
+            TransactionQueue::upsert_batch(&db, &to_be_upserted).expect("Could not update transaction queue");
+            TransactionQueue::delete_batch(&db, &to_be_deleted).expect("Could not delete from transaction queue");
+            CompleteTransaction::upsert_batch(&db, &complete_transactions).expect("Could not insert complete transactions");
+            println!();
+            
+            /*
             // If that transaction actually exists:
             let (buy_transaction, quantity) = if let Some((mut latest, buy_transaction)) = latest {
                 // The quantity take from this queue can not be more than quantity left.
@@ -123,15 +156,16 @@ pub fn update(eve_character: EveCharacter, mut client: auth::AuthedClient, db: E
             // Probably means that sell transactions don't need to be added to the database
 
             let complete_transaction = CompleteTransaction::new(eve_character.id, buy_transaction, transaction, quantity);
-            complete_transaction.upsert(&db).expect("Could not insert complete transaction into database.");
+            complete_transaction.upsert(&db).expect("Could not insert complete transaction into database.");*/
         }
-        
     }
+
+    
     
 
     // Merge the two into one by
 
-    Redirect::to(uri!(dashboard))
+    Redirect::to(uri!(dashboard: _))
 }
 
 #[get("/update", rank = 2)]
@@ -179,4 +213,35 @@ fn get_profit_per_day(transactions: &Vec<CompleteTransactionView>) -> Vec<DayPro
     let mut profit_days: Vec<DayProfit> = mapping.into_iter().map(|x| x.1).collect();
     profit_days.sort_by_key(|x| std::cmp::Reverse(x.date));
     profit_days    
+}
+
+fn get_max_profits(transactions: &Vec<CompleteTransactionView>) -> Vec<TypeProfit> {
+    let mut mapping = HashMap::<String, (f32, i64, i64)>::new();
+
+    for transaction in transactions.iter().filter(|x| !x.is_buy && x.buy_unit_price.is_some()) {
+        let entry = mapping.entry(transaction.type_name.clone()).or_insert((0.0, 0, 0));
+        let sell_price = transaction.sell_unit_price;        
+        let sell_tax = transaction.sell_unit_tax;
+        let buy_price = transaction.buy_unit_price.unwrap();
+        let buy_tax = transaction.buy_unit_tax.unwrap();
+        let amount = transaction.quantity as f32;
+
+        let duration = transaction.sell_date - transaction.buy_date.unwrap();
+
+        entry.0 += (sell_price - buy_price - sell_tax - buy_tax) * amount;
+        entry.1 += duration.num_seconds();
+        entry.2 += 1;
+    }
+
+    let mut profits: Vec<_> = mapping.into_iter().map(|(item_name, (profit, seconds, items))| {
+        TypeProfit {
+            item_name,
+            profit,
+            avg_time: seconds / items,
+            avg_profit: (profit * 86400.0) / seconds as f32
+        }
+    }).collect();
+    profits.sort_by_key(|x| std::cmp::Reverse((x.avg_profit * 100.0) as i32)); // sigh.
+
+    profits
 }
