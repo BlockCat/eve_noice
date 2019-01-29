@@ -4,7 +4,10 @@ CREATE TABLE eve_characters (
   name VARCHAR(128) UNIQUE NOT NULL,
   access_token VARCHAR(128) UNIQUE NOT NULL,
   refresh_token VARCHAR(128) UNIQUE NOT NULL,
-  expiry_date DATETIME NOT NULL,  
+  expiry_date DATETIME NOT NULL,
+  last_update DATETIME NOT NULL DEFAULT (DATETIME(0)),  
+  sell_tax REAL NOT NULL DEFAULT 0.02,
+  broker_fee REAL NOT NULL DEFAULT 0.03,
   PRIMARY KEY (id)
 );
 

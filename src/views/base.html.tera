@@ -2,12 +2,12 @@
     <head>
         <title>Noice - profit tracker</title>
         <style>            
-            table { border-collapse: collapse; }
-            table td + td  { border-left:1px solid black; }
-            table th + th  { border-left:1px solid black; }
-            table th  { border-bottom:1px solid black; }
-            table, th, td { padding: 3px; }
-            table tr:nth-child(even) { background: #ECECEA; }
+            table.decorated_table { border-collapse: collapse; }
+            table.decorated_table td + td  { border-left:1px solid black; }
+            table.decorated_table th + th  { border-left:1px solid black; }
+            table.decorated_table th  { border-bottom:1px solid black; }
+            table.decorated_table, th, td { padding: 3px; }
+            table.decorated_table tr:nth-child(even) { background: #ECECEA; }
             td.right { text-align: right; }
             td.center { text-align: center; }
             td.left { text-align: left; padding-left: 1em; }                        

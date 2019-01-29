@@ -11,6 +11,9 @@ pub struct EveCharacter {
     pub access_token: String,
     pub refresh_token: String,
     pub expiry_date: NaiveDateTime,
+    pub last_update: NaiveDateTime,
+    pub sell_tax: f32,
+    pub broker_fee: f32
 }
 
 
@@ -18,9 +21,13 @@ impl EveCharacter {
     pub fn new(id: i32, name: String, access_token: String, refresh_token: String, expiry_date: u32) -> EveCharacter {
         
         let expiry_date = chrono::Utc::now() + chrono::Duration::seconds(expiry_date as i64 - 60);
+        let last_update = chrono::Utc::now() - chrono::Duration::seconds(3660);
         EveCharacter {
             id, name, access_token, refresh_token, 
-            expiry_date: expiry_date.naive_utc()
+            expiry_date: expiry_date.naive_utc(),
+            last_update: last_update.naive_utc(),
+            sell_tax: 0.02,
+            broker_fee: 0.03
         }
     }
 

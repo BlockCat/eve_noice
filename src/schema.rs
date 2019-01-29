@@ -18,6 +18,9 @@ table! {
         access_token -> Text,
         refresh_token -> Text,
         expiry_date -> Timestamp,
+        last_update -> Timestamp,
+        sell_tax -> Float,
+        broker_fee -> Float,
     }
 }
 

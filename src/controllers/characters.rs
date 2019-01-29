@@ -1,5 +1,6 @@
 use rocket::Route;
 use rocket::response::*;
+use rocket::request::Form;
 use rocket::http::{Cookies, Cookie, Status};
 use rocket_contrib::templates::*;
 
@@ -33,16 +34,64 @@ pub fn config_unauth() -> Status {
     Status::new(403, "Not authenticated")
 }
 #[get("/config")]
-pub fn config(_character: EveCharacter) -> Template {
+pub fn config(character: EveCharacter) -> Template {
     let view_model = CharacterConfigViewModel {
         flash: None,
+        sell_tax: format!("{:.02}", 100.0 * character.sell_tax),
+        broker_fee: format!("{:.02}", 100.0 * character.broker_fee),
     };
     Template::render("characters/config", view_model)
 }
-#[post("/config")]
-pub fn config_post(_character: EveCharacter) -> Template {
+
+#[derive(FromForm)]
+pub struct EveConfig {
+    sell_tax: String,
+    broker_fee: String
+}
+
+#[post("/config", data = "<config>")]
+pub fn config_post(mut character: EveCharacter, db: EveDatabase, config: Option<Form<EveConfig>>) -> Template {
+
+    if config.is_none() {
+        let view_model = CharacterConfigViewModel {
+            flash: Some("You provided an invalid config".to_owned()),
+            sell_tax: format!("{:.02}", 100.0 * character.sell_tax),
+            broker_fee: format!("{:.02}", 100.0 * character.broker_fee),
+        };
+        return Template::render("characters/config", view_model);
+    }
+
+    let config = config.unwrap();
+
+    let sell_tax: Option<f32> = config.sell_tax.replace(",", ".").parse().ok();
+    let broker_fee: Option<f32> = config.broker_fee.replace(",", ".").parse().ok();
+
+    
+
+    let (sell_tax, broker_fee) = match (sell_tax, broker_fee) {
+        (Some(st), Some(bf)) => (st, bf),
+        _ => {
+            let view_model = CharacterConfigViewModel {
+                flash: Some("You provided an invalid config".to_owned()),
+                sell_tax: format!("{:.02}", sell_tax.unwrap_or(character.sell_tax * 100.0)),
+                broker_fee: format!("{:.02}", broker_fee.unwrap_or(character.broker_fee * 100.0)),
+            };
+            return Template::render("characters/config", view_model);
+        }
+    };
+
+    character.sell_tax = sell_tax / 100.0;
+    character.broker_fee = broker_fee / 100.0;
+
+    let message = match character.upsert(&db).ok() {
+        Some(_) => "Saved config",
+        _ => "Failed saving config, pls send me an EVE Mail."
+    };
+
     let view_model = CharacterConfigViewModel {
-        flash: Some("Saved config".to_owned()),
+        flash: Some(message.to_owned()),
+        sell_tax: format!("{:.02}", 100.0 * character.sell_tax),
+        broker_fee: format!("{:.02}", 100.0 * character.broker_fee),
     };
     Template::render("characters/config", view_model)
 }
@@ -83,6 +132,11 @@ pub fn callback(code: String, state: String, conn: EveDatabase, mut cookies: Coo
     
     let new_character = EveCharacter::new(id, name, access_token.clone(), refresh_token, expiry_date);
 
+    let existing = match EveCharacter::find(id, &conn).ok() {
+        Some(_) => true,
+        _ => false
+    };
+
     new_character.upsert(&conn).map_err(|e| {
         print!("{:?}", e);
         String::from("Something went wrong when adding character to the database.")
@@ -97,7 +151,11 @@ pub fn callback(code: String, state: String, conn: EveDatabase, mut cookies: Coo
 
     println!("Adding cookies");
     
-    Ok(Redirect::to(uri!(index)))
+    if existing {
+        Ok(Redirect::to(uri!(index)))
+    } else {
+        Ok(Redirect::to("/characters/config"))
+    }
     
 }
 

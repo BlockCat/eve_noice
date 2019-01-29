@@ -39,6 +39,13 @@ pub fn index() -> Template {
 #[get("/update")]
 pub fn update(eve_character: EveCharacter, mut client: auth::AuthedClient, db: EveDatabase) -> Redirect {
 
+    let last_updated = eve_character.last_update;
+    let duration = Utc::now().naive_utc() - last_updated;
+
+    if duration.num_seconds() < 3600 {        
+        return Redirect::to(uri!(dashboard: _));
+    }
+
     let latest_transaction_date = match WalletTransaction::find_latest(eve_character.id, &db) {
         Ok(latest_transaction) => DateTime::from_utc(latest_transaction.date, Utc),
         Err(diesel::NotFound) => (chrono::Utc::now() - chrono::Duration::days(30)),
@@ -67,9 +74,9 @@ pub fn update(eve_character: EveCharacter, mut client: auth::AuthedClient, db: E
         .take_while(|x| x.date > latest_transaction_date)        
         .map(|x| {
             let taxes = if x.is_buy {
-                x.unit_price * 0.026
+                x.unit_price * (eve_character.broker_fee)
             } else {
-                x.unit_price * 0.038
+                x.unit_price * (eve_character.broker_fee + eve_character.sell_tax)
             };
 
             WalletTransaction::new(eve_character.id, x, taxes)
@@ -85,11 +92,8 @@ pub fn update(eve_character: EveCharacter, mut client: auth::AuthedClient, db: E
         .collect::<Vec<_>>();
 
     TransactionQueue::upsert_batch(&db, &transaction_queue).expect("Could not insert bought into queue");
-
-    println!("Inserted into queue");
     
-    for transaction in esi_transactions.iter().rev().filter(|x| !x.is_buy) {
-        print!("Starting transaction, ");
+    for transaction in esi_transactions.iter().rev().filter(|x| !x.is_buy) {        
         // Now take it from queue
         let mut quantity_left = transaction.quantity;
         let mut to_be_upserted = Vec::new();
@@ -97,13 +101,15 @@ pub fn update(eve_character: EveCharacter, mut client: auth::AuthedClient, db: E
         let mut complete_transactions = Vec::new();
         let mut page = 0;
         // While there is a quantity left that needs to be processed
-        while quantity_left > 0 {
-            print!("quantity left: {}, ", quantity_left);
+        while quantity_left > 0 {            
             // Take first transaction in the queue of the type that has a quantity left.
-            let latest = TransactionQueue::find_latest(eve_character.id, transaction.type_id, transaction.date, 20, page, &db).expect("Could not get latest transacations");
-            print!("latests: {}", latest.len());
+            let latest = TransactionQueue::find_latest(eve_character.id, transaction.type_id, transaction.date, 20, page, &db).expect("Could not get latest transacations");            
             if latest.len() > 0 {
-                for (mut latest, buy_transaction) in latest {
+                for (mut latest, buy_transaction) in latest {    
+
+                    if quantity_left == 0 { // No more left
+                        break;
+                    }                
                     let quantity_taken = std::cmp::min(quantity_left, latest.amount_left);
                     latest.amount_left -= quantity_taken;
 
@@ -132,6 +138,10 @@ pub fn update(eve_character: EveCharacter, mut client: auth::AuthedClient, db: E
     }
 
     // Merge the two into one by
+    let mut eve_character = eve_character;
+    eve_character.last_update = Utc::now().naive_utc();
+    eve_character.upsert(&db).expect("Could not update eve character");
+
 
     Redirect::to(uri!(dashboard: _))
 }
