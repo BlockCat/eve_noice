@@ -8,32 +8,6 @@
         <a href="/characters/logout">Logout</a>
     </nav>
     <h1>Welcome: {{ character_name }}</h1>    
-
-    
-    <h2 id="stats">Statistics for past {{days}} days</h2>
-    <a href="?days=5#stats">5 days</a> | <a href="?days=7#stats"> 7 days </a> | <a href="?days=14#stats"> 14 days </a> | <a href="?days=30#stats"> 30 days </a>
-    <table class="decorated_table">
-        <thead>
-            <th>Date</th>
-            <th>ISK Buy</th>
-            <th>ISK Sell</th>
-            <th>Revenue</th>
-            <th>Taxes</th>
-            <th>Profit</th>            
-        </thead>
-        <tbody>
-        {% for day in per_day %}
-            <tr>
-                <td>{{day.date | date(format="%v")}}</td>
-                <td class="right">{{day.isk_buy | isk}}</td>
-                <td class="right">{{day.isk_sell | isk}}</td>
-                <td class="right">{{day.revenue | isk}}</td>
-                <td class="right">{{day.taxes | isk}}</td>                
-                {{ macros::isk_td(amount=day.profit) }}
-            </tr>
-        {% endfor %}
-        </tbody>
-    </table>
     <h2>Sold transactions in past {{days}} days</h2>
     <a href="?days=5">5 days</a> | <a href="?days=7"> 7 days </a> | <a href="?days=14"> 14 days </a> | <a href="?days=30"> 30 days </a>
     <table class="decorated_table">
@@ -64,6 +38,30 @@
                 {{ macros::isk_td(amount=transaction.profit) }}
                 <td class="center">{{transaction.markup_percentage}}</td>
                 <td class="left">{{transaction.time_span | duration}}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    <h2 id="stats">Statistics for past {{days}} days</h2>
+    <a href="?days=5#stats">5 days</a> | <a href="?days=7#stats"> 7 days </a> | <a href="?days=14#stats"> 14 days </a> | <a href="?days=30#stats"> 30 days </a>
+    <table class="decorated_table">
+        <thead>
+            <th>Date</th>
+            <th>ISK Buy</th>
+            <th>ISK Sell</th>
+            <th>Revenue</th>
+            <th>Taxes</th>
+            <th>Profit</th>            
+        </thead>
+        <tbody>
+        {% for day in per_day %}
+            <tr>
+                <td>{{day.date | date(format="%v")}}</td>
+                <td class="right">{{day.isk_buy | isk}}</td>
+                <td class="right">{{day.isk_sell | isk}}</td>
+                <td class="right">{{day.revenue | isk}}</td>
+                <td class="right">{{day.taxes | isk}}</td>                
+                {{ macros::isk_td(amount=day.profit) }}
             </tr>
         {% endfor %}
         </tbody>
