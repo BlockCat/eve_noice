@@ -4,3 +4,8 @@ pub struct CharacterConfigViewModel {
     pub sell_tax: String,
     pub broker_fee: String
 }
+
+#[derive(Serialize)]
+pub struct CharacterRedirectViewModel {
+    pub uri_link: String
+}

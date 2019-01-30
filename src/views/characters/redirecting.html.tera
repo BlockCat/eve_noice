@@ -1,0 +1,12 @@
+{% extends "base" %}
+
+{% block content %}
+    <p>You have been logged in, and we are now redirecting you. <a href="{{uri_link}}">Click here if it is not redirecting</a></p>
+
+    <script>
+        setTimeout(function redirect() {
+            window.location.href = "{{uri_link | safe}}"
+        }, 1200);
+    </script>
+
+{% endblock content %}

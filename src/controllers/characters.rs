@@ -11,7 +11,7 @@ use jwt::claims::Claims;
 use crate::auth;
 use crate::models::EveCharacter;
 use crate::EveDatabase;
-use crate::view_models::CharacterConfigViewModel;
+use crate::view_models::{ CharacterConfigViewModel, CharacterRedirectViewModel };
 
 #[get("/")]
 pub fn index_authed(_character: EveCharacter) -> Redirect {
@@ -108,7 +108,7 @@ pub fn logout(mut cookies: Cookies) -> Redirect {
 //TODO: To Result return
 #[get("/callback?<code>&<state>")]
 #[allow(unused)]
-pub fn callback(code: String, state: String, conn: EveDatabase, mut cookies: Cookies) -> std::result::Result<Redirect, String> {
+pub fn callback(code: String, state: String, conn: EveDatabase, mut cookies: Cookies) -> std::result::Result<Template, String> {
     let config = auth::create_config();
 
     let token_result = config.exchange_code(code).map_err(|_| {
@@ -130,11 +130,14 @@ pub fn callback(code: String, state: String, conn: EveDatabase, mut cookies: Coo
     let refresh_token = token_result.refresh_token.expect("Not sure what should be here, but man did you do something wrong.\n No refresh token");
     let expiry_date = token_result.expires_in.expect("Not sure what should be here, but man did you do something wrong.\n No expiry date");
     
-    let new_character = EveCharacter::new(id, name, access_token.clone(), refresh_token, expiry_date);
-
-    let existing = match EveCharacter::find(id, &conn).ok() {
-        Some(_) => true,
-        _ => false
+    let (existing, new_character) = match EveCharacter::find(id, &conn).ok() {
+        Some(mut character) => {
+            character.access_token = access_token;
+            character.refresh_token = refresh_token;
+            character.expiry_date = (chrono::Utc::now() + chrono::Duration::seconds(expiry_date as i64 - 60)).naive_utc();
+            (true, character)
+        },
+        _ => (false, EveCharacter::new(id, name, access_token.clone(), refresh_token, expiry_date))
     };
 
     new_character.upsert(&conn).map_err(|e| {
@@ -151,12 +154,15 @@ pub fn callback(code: String, state: String, conn: EveDatabase, mut cookies: Coo
 
     println!("Adding cookies");
     
-    if existing {
-        Ok(Redirect::to(uri!(index)))
+    let redirect = if existing {
+        "/".to_owned()
     } else {
-        Ok(Redirect::to("/characters/config"))
-    }
+        "/characters/config".to_owned()
+    };
     
+    Ok(Template::render("characters/redirecting", CharacterRedirectViewModel {
+        uri_link: redirect
+    }))   
 }
 
 pub fn get_routes() -> Vec<Route> {
