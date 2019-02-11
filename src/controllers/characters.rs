@@ -120,7 +120,7 @@ pub fn callback(code: String, state: String, conn: EveDatabase, mut cookies: Coo
             String::from("Could not parse your token.")
         })?;
 
-        let id = jwt.claims.reg.sub.unwrap().split(":").nth(2).map(|e| e.parse().unwrap()).expect("Couldn't extract id");    
+        let id = jwt.claims.reg.sub.unwrap().split(':').nth(2).map(|e| e.parse().unwrap()).expect("Couldn't extract id");    
         let name = jwt.claims.private["name"].as_string().unwrap().to_owned();
 
         (id, name)
@@ -134,7 +134,7 @@ pub fn callback(code: String, state: String, conn: EveDatabase, mut cookies: Coo
         Some(mut character) => {
             character.access_token = access_token;
             character.refresh_token = refresh_token;
-            character.expiry_date = (chrono::Utc::now() + chrono::Duration::seconds(expiry_date as i64 - 60)).naive_utc();
+            character.expiry_date = (chrono::Utc::now() + chrono::Duration::seconds(i64::from(expiry_date) - 60)).naive_utc();
             (true, character)
         },
         _ => (false, EveCharacter::new(id, name, access_token.clone(), refresh_token, expiry_date))

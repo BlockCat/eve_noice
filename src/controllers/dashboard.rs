@@ -104,7 +104,7 @@ pub fn update(eve_character: EveCharacter, mut client: auth::AuthedClient, db: E
         while quantity_left > 0 {            
             // Take first transaction in the queue of the type that has a quantity left.
             let latest = TransactionQueue::find_latest(eve_character.id, transaction.type_id, transaction.date, 20, page, &db).expect("Could not get latest transacations");            
-            if latest.len() > 0 {
+            if !latest.is_empty() {
                 for (mut latest, buy_transaction) in latest {    
 
                     if quantity_left == 0 { // No more left
@@ -155,13 +155,13 @@ pub fn get_routes() -> Vec<Route> {
     routes![index, dashboard, update_error, update]
 }
 
-fn get_transactions_view(transactions: &Vec<CompleteTransactionView>) -> Vec<ViewTransaction> {
+fn get_transactions_view(transactions: &[CompleteTransactionView]) -> Vec<ViewTransaction> {
     transactions.iter()
         .map(|x| x.into())
         .collect()
 }
 
-fn get_profit_per_day(transactions: &Vec<CompleteTransactionView>) -> Vec<DayProfit> {
+fn get_profit_per_day(transactions: &[CompleteTransactionView]) -> Vec<DayProfit> {
     let mut mapping = HashMap::<NaiveDate, DayProfit>::new();
 
     // Reminder that if the transaction is buy, it will be saved in sell fields
@@ -193,7 +193,7 @@ fn get_profit_per_day(transactions: &Vec<CompleteTransactionView>) -> Vec<DayPro
     profit_days    
 }
 
-fn get_max_profits(transactions: &Vec<CompleteTransactionView>) -> Vec<TypeProfit> {
+fn get_max_profits(transactions: &[CompleteTransactionView]) -> Vec<TypeProfit> {
     let mut mapping = HashMap::<String, (f32, i64, i64)>::new();
 
     for transaction in transactions.iter().filter(|x| !x.is_buy && x.buy_unit_price.is_some()) {

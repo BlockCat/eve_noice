@@ -24,7 +24,7 @@ impl WalletTransaction {
     pub fn new(character_id: i32, transaction: EsiWalletTransaction, unit_taxes: f32) -> Self {
         WalletTransaction {
             transaction_id: transaction.transaction_id,
-            character_id: character_id,
+            character_id,
             client_id: transaction.client_id,
             date: transaction.date.naive_utc(),
             is_buy: transaction.is_buy,

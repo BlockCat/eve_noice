@@ -20,7 +20,7 @@ pub struct EveCharacter {
 impl EveCharacter {
     pub fn new(id: i32, name: String, access_token: String, refresh_token: String, expiry_date: u32) -> EveCharacter {
         
-        let expiry_date = chrono::Utc::now() + chrono::Duration::seconds(expiry_date as i64 - 60);
+        let expiry_date = chrono::Utc::now() + chrono::Duration::seconds(i64::from(expiry_date) - 60);
         let last_update = chrono::Utc::now() - chrono::Duration::seconds(3660);
         EveCharacter {
             id, name, access_token, refresh_token, 

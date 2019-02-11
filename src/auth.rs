@@ -44,7 +44,7 @@ impl<'a, 'r> request::FromRequest<'a, 'r> for AuthedClient {
 
             eve_character.access_token = token.access_token;
             eve_character.refresh_token = token.refresh_token.unwrap();
-            eve_character.expiry_date = (chrono::Utc::now() + chrono::Duration::seconds(token.expires_in.unwrap() as i64 - 60)).naive_utc();
+            eve_character.expiry_date = (chrono::Utc::now() + chrono::Duration::seconds(i64::from(token.expires_in.unwrap()) - 60)).naive_utc();
 
             // Update database
             match eve_character.upsert(&database) {
