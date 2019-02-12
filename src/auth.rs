@@ -32,7 +32,7 @@ impl<'a, 'r> request::FromRequest<'a, 'r> for AuthedClient {
         let mut eve_character = request.guard::<EveCharacter>()?;        
 
         // We get an eve_character,
-        let access_token = if eve_character.expiry_date > chrono::Utc::now().naive_utc() { // Access token is not yet expired
+        let taccess_token = if eve_character.expiry_date > chrono::Utc::now().naive_utc() { // Access token is not yet expired
             eve_character.access_token.clone()
         } else { // Access token is expired            
             let database = request.guard::<EveDatabase>()?;
@@ -50,7 +50,7 @@ impl<'a, 'r> request::FromRequest<'a, 'r> for AuthedClient {
 
             // Update database
             match diesel::update(eve_characters.filter(id.eq(eve_character.id)))
-                .set((access_token.eq(eve_character.access_token), refresh_token.eq(eve_character.refresh_token), expiry_date.eq(eve_character.expiry_date)))
+                .set((access_token.eq(eve_character.access_token.clone()), refresh_token.eq(eve_character.refresh_token), expiry_date.eq(eve_character.expiry_date)))
                 .execute(&database.0) {
                 Ok(_) => eve_character.access_token.clone(),
                 Err(e) => {
@@ -65,7 +65,7 @@ impl<'a, 'r> request::FromRequest<'a, 'r> for AuthedClient {
             .build(dotenv!("EVE_ESI_URL")).unwrap();
 
         client.set_header("USER_AGENT", "Eve Noic - Gale Kishunuba ").unwrap();
-        client.set_header("Authorization", &format!("Bearer {}", access_token)).unwrap();
+        client.set_header("Authorization", &format!("Bearer {}", taccess_token)).unwrap();
 
         rocket::Outcome::Success(AuthedClient(client))
     }
