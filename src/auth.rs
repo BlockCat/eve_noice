@@ -46,10 +46,13 @@ impl<'a, 'r> request::FromRequest<'a, 'r> for AuthedClient {
             eve_character.refresh_token = token.refresh_token.unwrap();
             eve_character.expiry_date = (chrono::Utc::now() + chrono::Duration::seconds(i64::from(token.expires_in.unwrap()) - 60)).naive_utc();
 
-            // Update database
+            // Update database            
             match eve_character.upsert(&database) {
                 Ok(_) => eve_character.access_token.clone(),
-                Err(_) => return rocket::Outcome::Failure((Status::new(500, "Something went wrong in the database."), ()))
+                Err(e) => {
+                    println!("{}", format!("Something went wrong in the database, Could not upsert character: {:?}", e));
+                    return rocket::Outcome::Failure((Status::new(500,"Could not upsert character in database"), ()));
+                }
             }
         };        
         

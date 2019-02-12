@@ -1,17 +1,18 @@
 -- Your SQL goes here
-CREATE TABLE eve_characters (
+START TRANSACTION;
+CREATE TABLE IF NOT EXISTS eve_characters (
   id int NOT NULL,
   name VARCHAR(128) UNIQUE NOT NULL,
   access_token VARCHAR(128) UNIQUE NOT NULL,
   refresh_token VARCHAR(128) UNIQUE NOT NULL,
   expiry_date DATETIME NOT NULL,
-  last_update DATETIME NOT NULL DEFAULT (DATETIME(0)),  
-  sell_tax REAL NOT NULL DEFAULT 0.02,
-  broker_fee REAL NOT NULL DEFAULT 0.03,
+  last_update DATETIME NOT NULL DEFAULT 0,  
+  sell_tax FLOAT NOT NULL DEFAULT 0.02,
+  broker_fee FLOAT NOT NULL DEFAULT 0.03,
   PRIMARY KEY (id)
 );
 
-CREATE TABLE inv_types(type_id INT PRIMARY KEY NOT NULL,type_name TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS inv_types(type_id INT PRIMARY KEY NOT NULL,type_name TEXT NOT NULL);
 INSERT INTO inv_types VALUES(0,'#System');
 INSERT INTO inv_types VALUES(2,'Corporation');
 INSERT INTO inv_types VALUES(3,'Region');
@@ -35723,3 +35724,5 @@ INSERT INTO inv_types VALUES(370308,'''Deathshroud'' AM-M SKIN');
 INSERT INTO inv_types VALUES(370488,'‘Tairei’s Crimson’ AM-L SKIN');
 INSERT INTO inv_types VALUES(370658,'Council''s Modified Repair Tool');
 INSERT INTO inv_types VALUES(371027,'X-MS16 Snowball Launcher');
+COMMIT;
+

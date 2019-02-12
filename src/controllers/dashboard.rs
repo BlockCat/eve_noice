@@ -45,6 +45,7 @@ pub fn update(eve_character: EveCharacter, mut client: auth::AuthedClient, db: E
     if duration.num_seconds() < 3600 {        
         return Redirect::to(uri!(dashboard: _));
     }
+    println!("updating 1");
 
     let latest_transaction_date = match WalletTransaction::find_latest(eve_character.id, &db) {
         Ok(latest_transaction) => DateTime::from_utc(latest_transaction.date, Utc),
@@ -52,9 +53,11 @@ pub fn update(eve_character: EveCharacter, mut client: auth::AuthedClient, db: E
         Err(e) => panic!(e)
     };    
 
+    println!("date: {:?}", latest_transaction_date);
+
     // Walk back through esi transactions and journals
     // ----------------------------------------------------    
-    let EsiWalletTransactions(mut esi_transactions) = client.0.get(eve_character.id).unwrap();
+    let EsiWalletTransactions(mut esi_transactions) = client.0.get(eve_character.id).expect("Could not retrieve data from evetech");
 
     println!("Starting walkback till: {:?}, right now: {:?}", latest_transaction_date, esi_transactions.last().unwrap().date);
 
