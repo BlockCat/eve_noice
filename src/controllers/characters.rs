@@ -148,10 +148,21 @@ pub fn callback(code: String, state: String, conn: EveDatabase, mut cookies: Coo
         _ => (false, EveCharacter::new(id, name, access_token.clone(), refresh_token, expiry_date))
     };
 
-    new_character.upsert(&conn).map_err(|e| {
-        print!("{:?}", e);
-        String::from("Something went wrong when adding character to the database.")
-    })?;
+    if !existing {
+        new_character.insert(&conn).map_err(|e| {
+            print!("{:?}", e);
+            String::from("Something went wrong when adding character to the database.")
+        })?;
+    } else {
+        use crate::schema::eve_characters::dsl::*;
+        use diesel::prelude::*;
+        diesel::update(eve_characters.filter(id.eq(new_character.id)))
+            .set((access_token.eq(new_character.access_token.clone()), refresh_token.eq(new_character.refresh_token), expiry_date.eq(new_character.expiry_date)))
+            .execute(&conn.0).map_err(|e| {
+                print!("{:?}", e);
+                String::from("Could not update character when logging in.")
+            })?;
+    }
     
     let cookie_char_id = Cookie::build("key", id.to_string())
         .path("/")
