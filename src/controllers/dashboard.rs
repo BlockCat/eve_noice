@@ -143,7 +143,13 @@ pub fn update(eve_character: EveCharacter, mut client: auth::AuthedClient, db: E
     // Merge the two into one by
     let mut eve_character = eve_character;
     eve_character.last_update = Utc::now().naive_utc();
-    eve_character.upsert(&db).expect("Could not update eve character");
+    {
+        use crate::schema::eve_characters::dsl::*;
+        use diesel::prelude::*;
+        diesel::update(eve_characters.filter(id.eq(eve_character.id)))
+            .set(last_update.eq(eve_character.last_update))
+            .execute(&db.0)
+    }.expect("Could not update eve character");
 
 
     Redirect::to(uri!(dashboard: _))
