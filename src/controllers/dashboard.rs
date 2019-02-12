@@ -45,15 +45,12 @@ pub fn update(eve_character: EveCharacter, mut client: auth::AuthedClient, db: E
     if duration.num_seconds() < 3600 {        
         return Redirect::to(uri!(dashboard: _));
     }
-    println!("updating 1");
 
     let latest_transaction_date = match WalletTransaction::find_latest(eve_character.id, &db) {
         Ok(latest_transaction) => DateTime::from_utc(latest_transaction.date, Utc),
         Err(diesel::NotFound) => (chrono::Utc::now() - chrono::Duration::days(30)),
         Err(e) => panic!(e)
     };    
-
-    println!("date: {:?}", latest_transaction_date);
 
     // Walk back through esi transactions and journals
     // ----------------------------------------------------    
@@ -136,7 +133,6 @@ pub fn update(eve_character: EveCharacter, mut client: auth::AuthedClient, db: E
             TransactionQueue::upsert_batch(&db, &to_be_upserted).expect("Could not update transaction queue");
             TransactionQueue::delete_batch(&db, &to_be_deleted).expect("Could not delete from transaction queue");
             CompleteTransaction::upsert_batch(&db, &complete_transactions).expect("Could not insert complete transactions");
-            println!();
         }
     }
 

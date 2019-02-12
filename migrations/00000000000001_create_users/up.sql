@@ -2,9 +2,9 @@
 START TRANSACTION;
 CREATE TABLE IF NOT EXISTS eve_characters (
   id int NOT NULL,
-  name VARCHAR(128) UNIQUE NOT NULL,
-  access_token VARCHAR(128) UNIQUE NOT NULL,
-  refresh_token VARCHAR(128) UNIQUE NOT NULL,
+  name  VARCHAR(128) UNIQUE NOT NULL,
+  access_token TEXT NOT NULL,
+  refresh_token TEXT NOT NULL,
   expiry_date DATETIME NOT NULL,
   last_update DATETIME NOT NULL DEFAULT 0,  
   sell_tax FLOAT NOT NULL DEFAULT 0.02,

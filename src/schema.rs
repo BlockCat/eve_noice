@@ -15,8 +15,8 @@ table! {
     eve_characters (id) {
         id -> Integer,
         name -> Varchar,
-        access_token -> Varchar,
-        refresh_token -> Varchar,
+        access_token -> Text,
+        refresh_token -> Text,
         expiry_date -> Datetime,
         last_update -> Datetime,
         sell_tax -> Float,
