@@ -83,7 +83,15 @@ pub fn config_post(mut character: EveCharacter, db: EveDatabase, config: Option<
     character.sell_tax = sell_tax / 100.0;
     character.broker_fee = broker_fee / 100.0;
 
-    let message = match character.upsert(&db).ok() {
+    let result = {
+        use crate::schema::eve_characters::dsl::*;
+        use diesel::prelude::*;
+        diesel::update(eve_characters.filter(id.eq(character.id)))
+            .set((sell_tax.eq(character.sell_tax), broker_fee.eq(character.broker_fee)))
+            .execute(&db.0)
+    }.ok();
+
+    let message = match result {
         Some(_) => "Saved config",
         _ => "Failed saving config, pls send me an EVE Mail."
     };
