@@ -1,0 +1,41 @@
+# Except for the secret key, none of these are actually needed; Rocket has sane
+# defaults. We show all of them here explicitly for demonstrative purposes.
+
+[global.limits]
+forms = 32768
+json = 1048576 # this is an extra used by the json contrib module
+msgpack = 1048576 # this is an extra used by the msgpack contrib module
+
+[development.tls]
+certs = "ssl/certificate.pem"
+key = "ssl/privkey.pem"
+
+
+[development]
+address = "192.168.0.102"
+port = 8000
+workers = 4
+log = "normal"
+# don't use this key! generate your own and keep it private!
+# generate using `openssl rand -base64 32`
+secret_key = "Wfwtz3RTZfZ6V/9LJlbWx1V47RPNj7XC78GX+h/fS0Q="
+template_dir = "src/views/"
+# Application_security
+access_token_timeout_days = 30
+# Don't use this key! generate your own and keep it private!
+# generate using `openssl rand -base64 16`
+password_salt = "0oV4fthHWByMCbf8RhomSA=="
+# Assets
+assets_dir = "src/assets"
+assets_host = "192.168.0.102:8000"
+serve_assets = true
+
+# Logging
+terminal_logger = true
+file_logger = true
+file_logger_dir_path = "../log/"
+log_level = "debug" # https://docs.rs/slog/2.1.1/slog/enum.Level.html
+
+[global.databases]
+eve_db = { url = "evedb.sqlite", pool_size = 8 }
+mysql_eve_db = { url = "mysql://<username>:<password>@localhost/eve_noice", pool_size = 10 }

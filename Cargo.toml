@@ -19,9 +19,10 @@ name = "hangar_test"
 path = "tests/lib.rs"
 
 [features]
-default = ["diesel_sqlite"]
+default = ["diesel_default", "diesel_mysql"]
 diesel_default = ["diesel/chrono", "diesel/serde_json", "r2d2", "rocket/tls"]
-diesel_sqlite = ["diesel_default", "diesel/sqlite"]
+diesel_sqlite = ["diesel/sqlite", "rocket_contrib/diesel_sqlite_pool"]
+diesel_mysql = ["diesel/mysql", "rocket_contrib/diesel_mysql_pool"]
 
 [dependencies]
 # openssl-sys = { version = "0.9.23", features = ["vendored"] }
@@ -34,7 +35,7 @@ tera = "0.11.20"
 # rocket
 rocket = { git = "https://github.com/SergioBenitez/Rocket.git", branch = "master" }
 rocket_codegen = { git = "https://github.com/SergioBenitez/Rocket.git", branch = "master" }
-rocket_contrib = { git = "https://github.com/SergioBenitez/Rocket.git", branch = "master", default-features = false, features = ["json", "tera_templates", "diesel_sqlite_pool", "serve"]}
+rocket_contrib = { git = "https://github.com/SergioBenitez/Rocket.git", branch = "master", default-features = false, features = ["json", "tera_templates", "serve"]}
 jwt = "0.4.0"
 # database
 # valid features are : "postgresql", "mysql", "sqlite"
