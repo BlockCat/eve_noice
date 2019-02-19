@@ -31,19 +31,40 @@ pub struct ViewProfit {
     
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Clone)]
 pub struct ViewTransaction {
     type_name: String,
     type_id: i32,
-    transaction_id: i64,
+    pub transaction_id: i64,
     date_time: chrono::NaiveDateTime,
     is_buy_text: String,
     quantity: i32,
     unit_price: f32,    
     taxes: f32,
     profit: f32,
-    markup_percentage: String,
-    time_span: i64,
+    pub markup_percentage: f32,
+    pub time_span: i64,
+}
+
+impl<'a> std::iter::Sum<&'a ViewTransaction> for ViewTransaction {
+    fn sum<I: Iterator<Item=&'a ViewTransaction>>(mut iter: I) -> Self {
+        let base = iter.next().unwrap().clone();
+        iter.fold(base, |x, acc| {
+            ViewTransaction {
+                type_name: acc.type_name.clone(),
+                type_id: acc.type_id,
+                transaction_id: x.transaction_id,
+                date_time: acc.date_time,
+                is_buy_text: acc.is_buy_text.clone(),
+                quantity: acc.quantity + x.quantity,
+                unit_price: acc.unit_price,
+                taxes: acc.taxes + x.taxes,
+                profit: acc.profit + x.profit,
+                markup_percentage: acc.markup_percentage + x.markup_percentage,
+                time_span: acc.time_span + x.time_span
+            }
+        })
+    }
 }
 
 impl From<CompleteTransactionView> for ViewTransaction {
@@ -68,12 +89,12 @@ impl From<&CompleteTransactionView> for ViewTransaction {
             let profit = -transaction.sell_unit_tax * transaction.quantity as f32;
             let taxes = transaction.sell_unit_tax * transaction.quantity as f32;
 
-            (profit, taxes, String::from(""))
+            (profit, taxes, 0.0)
         } else {
             let profit = (transaction.sell_unit_price - transaction.buy_unit_price.unwrap_or_default() - transaction.buy_unit_tax.unwrap_or_default() - transaction.sell_unit_tax) * transaction.quantity as f32;
             let taxes = (transaction.buy_unit_tax.unwrap_or_default() + transaction.sell_unit_tax) * transaction.quantity as f32;
-            let markup_percentage = transaction.buy_unit_price.map_or(String::from(""), |x| {
-                ((transaction.sell_unit_price / x - 1.0) * 100.0).separated_string_with_fixed_place(2)
+            let markup_percentage = transaction.buy_unit_price.map_or(0.0, |x| {
+                ((transaction.sell_unit_price / x - 1.0) * 100.0)
             });
 
             (profit, taxes, markup_percentage)

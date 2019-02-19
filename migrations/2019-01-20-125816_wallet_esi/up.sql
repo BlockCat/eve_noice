@@ -63,7 +63,7 @@ CREATE VIEW complete_transactions_views (
         wtbuy.transaction_id,
         wtsell.date,
         wtbuy.date,
-        FALSE,
+        0,
         ct.amount,
         wtbuy.unit_price,
         wtbuy.unit_taxes,
@@ -90,7 +90,7 @@ UNION
         wt.unit_taxes
     FROM wallet_transactions as wt
     LEFT JOIN inv_types AS it ON it.type_id = wt.type_id
-    WHERE wt.is_buy = TRUE;
+    WHERE wt.is_buy = 1;
 
 
 

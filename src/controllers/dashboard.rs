@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-
+use itertools::Itertools;
 use rocket::Route;
 use rocket::http::Status;
 use rocket::response::Redirect;
@@ -132,8 +132,7 @@ pub fn update(eve_character: EveCharacter, mut client: auth::AuthedClient, db: E
             page += 1;
             TransactionQueue::upsert_batch(&db, &to_be_upserted).expect("Could not update transaction queue");
             TransactionQueue::delete_batch(&db, &to_be_deleted).expect("Could not delete from transaction queue");
-            CompleteTransaction::upsert_batch(&db, &complete_transactions).expect("Could not insert complete transactions");
-            println!();
+            CompleteTransaction::upsert_batch(&db, &complete_transactions).expect("Could not insert complete transactions");            
         }
     }
 
@@ -158,6 +157,19 @@ pub fn get_routes() -> Vec<Route> {
 fn get_transactions_view(transactions: &Vec<CompleteTransactionView>) -> Vec<ViewTransaction> {
     transactions.iter()
         .map(|x| x.into())
+        .group_by(|x: &ViewTransaction| x.transaction_id)
+        .into_iter()        
+        .map(|(_, values)| {
+            let values = values.collect::<Vec<_>>();
+            if values.len() == 1 {
+                values[0].clone()
+            } else {                
+                let mut base: ViewTransaction = values.iter().sum();
+                base.time_span /= values.len() as i64;
+                base.markup_percentage /= values.len() as f32;
+                base
+            }
+        })
         .collect()
 }
 
