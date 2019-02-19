@@ -26,11 +26,13 @@ impl<'a, 'r> request::FromRequest<'a, 'r> for AuthedClient {
     type Error = ();
 
     fn from_request(request: &'a request::Request<'r>) -> request::Outcome<Self, Self::Error> {
+        use crate::schema::eve_characters::dsl::*;
+        use diesel::prelude::*;
 
         let mut eve_character = request.guard::<EveCharacter>()?;        
 
         // We get an eve_character,
-        let access_token = if eve_character.expiry_date > chrono::Utc::now().naive_utc() { // Access token is not yet expired
+        let taccess_token = if eve_character.expiry_date > chrono::Utc::now().naive_utc() { // Access token is not yet expired
             eve_character.access_token.clone()
         } else { // Access token is expired            
             let database = request.guard::<EveDatabase>()?;
@@ -44,12 +46,17 @@ impl<'a, 'r> request::FromRequest<'a, 'r> for AuthedClient {
 
             eve_character.access_token = token.access_token;
             eve_character.refresh_token = token.refresh_token.unwrap();
-            eve_character.expiry_date = (chrono::Utc::now() + chrono::Duration::seconds(token.expires_in.unwrap() as i64 - 60)).naive_utc();
+            eve_character.expiry_date = (chrono::Utc::now() + chrono::Duration::seconds(i64::from(token.expires_in.unwrap()) - 60)).naive_utc();
 
             // Update database
-            match eve_character.upsert(&database) {
+            match diesel::update(eve_characters.filter(id.eq(eve_character.id)))
+                .set((access_token.eq(eve_character.access_token.clone()), refresh_token.eq(eve_character.refresh_token), expiry_date.eq(eve_character.expiry_date)))
+                .execute(&database.0) {
                 Ok(_) => eve_character.access_token.clone(),
-                Err(_) => return rocket::Outcome::Failure((Status::new(500, "Something went wrong in the database."), ()))
+                Err(e) => {
+                    println!("{}", format!("Something went wrong in the database, Could not upsert character: {:?}", e));
+                    return rocket::Outcome::Failure((Status::new(500,"Could not upsert character in database"), ()));
+                }
             }
         };        
         
@@ -58,7 +65,7 @@ impl<'a, 'r> request::FromRequest<'a, 'r> for AuthedClient {
             .build(dotenv!("EVE_ESI_URL")).unwrap();
 
         client.set_header("USER_AGENT", "Eve Noic - Gale Kishunuba ").unwrap();
-        client.set_header("Authorization", &format!("Bearer {}", access_token)).unwrap();
+        client.set_header("Authorization", &format!("Bearer {}", taccess_token)).unwrap();
 
         rocket::Outcome::Success(AuthedClient(client))
     }

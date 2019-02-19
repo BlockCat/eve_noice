@@ -83,7 +83,15 @@ pub fn config_post(mut character: EveCharacter, db: EveDatabase, config: Option<
     character.sell_tax = sell_tax / 100.0;
     character.broker_fee = broker_fee / 100.0;
 
-    let message = match character.upsert(&db).ok() {
+    let result = {
+        use crate::schema::eve_characters::dsl::*;
+        use diesel::prelude::*;
+        diesel::update(eve_characters.filter(id.eq(character.id)))
+            .set((sell_tax.eq(character.sell_tax), broker_fee.eq(character.broker_fee)))
+            .execute(&db.0)
+    }.ok();
+
+    let message = match result {
         Some(_) => "Saved config",
         _ => "Failed saving config, pls send me an EVE Mail."
     };
@@ -120,7 +128,7 @@ pub fn callback(code: String, state: String, conn: EveDatabase, mut cookies: Coo
             String::from("Could not parse your token.")
         })?;
 
-        let id = jwt.claims.reg.sub.unwrap().split(":").nth(2).map(|e| e.parse().unwrap()).expect("Couldn't extract id");    
+        let id = jwt.claims.reg.sub.unwrap().split(':').nth(2).map(|e| e.parse().unwrap()).expect("Couldn't extract id");    
         let name = jwt.claims.private["name"].as_string().unwrap().to_owned();
 
         (id, name)
@@ -134,16 +142,27 @@ pub fn callback(code: String, state: String, conn: EveDatabase, mut cookies: Coo
         Some(mut character) => {
             character.access_token = access_token;
             character.refresh_token = refresh_token;
-            character.expiry_date = (chrono::Utc::now() + chrono::Duration::seconds(expiry_date as i64 - 60)).naive_utc();
+            character.expiry_date = (chrono::Utc::now() + chrono::Duration::seconds(i64::from(expiry_date) - 60)).naive_utc();
             (true, character)
         },
         _ => (false, EveCharacter::new(id, name, access_token.clone(), refresh_token, expiry_date))
     };
 
-    new_character.upsert(&conn).map_err(|e| {
-        print!("{:?}", e);
-        String::from("Something went wrong when adding character to the database.")
-    })?;
+    if !existing {
+        new_character.insert(&conn).map_err(|e| {
+            print!("{:?}", e);
+            String::from("Something went wrong when adding character to the database.")
+        })?;
+    } else {
+        use crate::schema::eve_characters::dsl::*;
+        use diesel::prelude::*;
+        diesel::update(eve_characters.filter(id.eq(new_character.id)))
+            .set((access_token.eq(new_character.access_token.clone()), refresh_token.eq(new_character.refresh_token), expiry_date.eq(new_character.expiry_date)))
+            .execute(&conn.0).map_err(|e| {
+                print!("{:?}", e);
+                String::from("Could not update character when logging in.")
+            })?;
+    }
     
     let cookie_char_id = Cookie::build("key", id.to_string())
         .path("/")

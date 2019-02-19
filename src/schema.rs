@@ -1,8 +1,8 @@
 table! {
     complete_transactions (buy_transaction_id, sell_transaction_id) {
         character_id -> Integer,
-        buy_transaction_id -> Nullable<BigInt>,
-        sell_transaction_id -> BigInt,
+        buy_transaction_id -> Bigint,
+        sell_transaction_id -> Bigint,
         bought_unit_price -> Nullable<Float>,
         bought_unit_taxes -> Nullable<Float>,
         sold_unit_price -> Float,
@@ -14,11 +14,11 @@ table! {
 table! {
     eve_characters (id) {
         id -> Integer,
-        name -> Text,
+        name -> Varchar,
         access_token -> Text,
         refresh_token -> Text,
-        expiry_date -> Timestamp,
-        last_update -> Timestamp,
+        expiry_date -> Datetime,
+        last_update -> Datetime,
         sell_tax -> Float,
         broker_fee -> Float,
     }
@@ -35,20 +35,20 @@ table! {
     transaction_queues (character_id, transaction_id) {
         character_id -> Integer,
         type_id -> Integer,
-        transaction_id -> BigInt,
+        transaction_id -> Bigint,
         amount_left -> Integer,
     }
 }
 
 table! {
     wallet_transactions (transaction_id) {
-        transaction_id -> BigInt,
+        transaction_id -> Bigint,
         character_id -> Integer,
         client_id -> Integer,
-        date -> Timestamp,
+        date -> Datetime,
         is_buy -> Bool,
         is_personal -> Bool,
-        location_id -> BigInt,
+        location_id -> Bigint,
         quantity -> Integer,
         type_id -> Integer,
         unit_price -> Float,

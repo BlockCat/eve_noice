@@ -54,7 +54,7 @@ pub fn update(eve_character: EveCharacter, mut client: auth::AuthedClient, db: E
 
     // Walk back through esi transactions and journals
     // ----------------------------------------------------    
-    let EsiWalletTransactions(mut esi_transactions) = client.0.get(eve_character.id).unwrap();
+    let EsiWalletTransactions(mut esi_transactions) = client.0.get(eve_character.id).expect("Could not retrieve data from evetech");
 
     println!("Starting walkback till: {:?}, right now: {:?}", latest_transaction_date, esi_transactions.last().unwrap().date);
 
@@ -104,7 +104,7 @@ pub fn update(eve_character: EveCharacter, mut client: auth::AuthedClient, db: E
         while quantity_left > 0 {            
             // Take first transaction in the queue of the type that has a quantity left.
             let latest = TransactionQueue::find_latest(eve_character.id, transaction.type_id, transaction.date, 20, page, &db).expect("Could not get latest transacations");            
-            if latest.len() > 0 {
+            if !latest.is_empty() {
                 for (mut latest, buy_transaction) in latest {    
 
                     if quantity_left == 0 { // No more left
@@ -132,14 +132,22 @@ pub fn update(eve_character: EveCharacter, mut client: auth::AuthedClient, db: E
             page += 1;
             TransactionQueue::upsert_batch(&db, &to_be_upserted).expect("Could not update transaction queue");
             TransactionQueue::delete_batch(&db, &to_be_deleted).expect("Could not delete from transaction queue");
-            CompleteTransaction::upsert_batch(&db, &complete_transactions).expect("Could not insert complete transactions");            
+
+            CompleteTransaction::upsert_batch(&db, &complete_transactions).expect("Could not insert complete transactions");
+
         }
     }
 
     // Merge the two into one by
     let mut eve_character = eve_character;
     eve_character.last_update = Utc::now().naive_utc();
-    eve_character.upsert(&db).expect("Could not update eve character");
+    {
+        use crate::schema::eve_characters::dsl::*;
+        use diesel::prelude::*;
+        diesel::update(eve_characters.filter(id.eq(eve_character.id)))
+            .set(last_update.eq(eve_character.last_update))
+            .execute(&db.0)
+    }.expect("Could not update eve character");
 
 
     Redirect::to(uri!(dashboard: _))
@@ -154,7 +162,7 @@ pub fn get_routes() -> Vec<Route> {
     routes![index, dashboard, update_error, update]
 }
 
-fn get_transactions_view(transactions: &Vec<CompleteTransactionView>) -> Vec<ViewTransaction> {
+fn get_transactions_view(transactions: &[CompleteTransactionView]) -> Vec<ViewTransaction> {
     transactions.iter()
         .map(|x| x.into())
         .group_by(|x: &ViewTransaction| x.transaction_id)
@@ -173,7 +181,7 @@ fn get_transactions_view(transactions: &Vec<CompleteTransactionView>) -> Vec<Vie
         .collect()
 }
 
-fn get_profit_per_day(transactions: &Vec<CompleteTransactionView>) -> Vec<DayProfit> {
+fn get_profit_per_day(transactions: &[CompleteTransactionView]) -> Vec<DayProfit> {
     let mut mapping = HashMap::<NaiveDate, DayProfit>::new();
 
     // Reminder that if the transaction is buy, it will be saved in sell fields
@@ -205,7 +213,7 @@ fn get_profit_per_day(transactions: &Vec<CompleteTransactionView>) -> Vec<DayPro
     profit_days    
 }
 
-fn get_max_profits(transactions: &Vec<CompleteTransactionView>) -> Vec<TypeProfit> {
+fn get_max_profits(transactions: &[CompleteTransactionView]) -> Vec<TypeProfit> {
     let mut mapping = HashMap::<String, (f32, i64, i64)>::new();
 
     for transaction in transactions.iter().filter(|x| !x.is_buy && x.buy_unit_price.is_some()) {

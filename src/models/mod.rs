@@ -1,10 +1,10 @@
 #[macro_export]
 macro_rules! upsert {
     ($x:ident) => {        
-        pub fn upsert(&self, conn: &crate::EveDatabase) -> diesel::result::QueryResult<usize> {
+        pub fn insert(&self, conn: &crate::EveDatabase) -> diesel::result::QueryResult<usize> {
             use diesel::prelude::*;
 
-            diesel::replace_into(crate::schema::$x::table)
+            diesel::insert_into(crate::schema::$x::table)
                 .values(self)
                 .execute(&conn.0)
         }

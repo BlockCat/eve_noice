@@ -36,13 +36,13 @@ pub struct ViewTransaction {
     type_name: String,
     type_id: i32,
     pub transaction_id: i64,
-    date_time: chrono::NaiveDateTime,
-    is_buy_text: String,
-    quantity: i32,
-    unit_price: f32,    
-    taxes: f32,
-    profit: f32,
-    pub markup_percentage: f32,
+    pub date_time: chrono::NaiveDateTime,
+    pub is_buy_text: String,
+    pub quantity: i32,
+    pub unit_price: f32,    
+    pub taxes: f32,
+    pub profit: f32,
+    pub markup_percentage: String,
     pub time_span: i64,
 }
 
@@ -108,8 +108,8 @@ impl From<&CompleteTransactionView> for ViewTransaction {
             is_buy_text: buy_text,
             quantity: transaction.quantity,
             unit_price: transaction.sell_unit_price,            
-            taxes: taxes,
-            profit: profit,
+            taxes,
+            profit,
             markup_percentage: markup,
             time_span: elapsed
         }
