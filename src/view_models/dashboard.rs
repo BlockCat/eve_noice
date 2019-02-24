@@ -42,7 +42,7 @@ pub struct ViewTransaction {
     pub unit_price: f32,    
     pub taxes: f32,
     pub profit: f32,
-    pub markup_percentage: String,
+    pub markup_percentage: f32,
     pub time_span: i64,
 }
 
@@ -94,7 +94,8 @@ impl From<&CompleteTransactionView> for ViewTransaction {
             let profit = (transaction.sell_unit_price - transaction.buy_unit_price.unwrap_or_default() - transaction.buy_unit_tax.unwrap_or_default() - transaction.sell_unit_tax) * transaction.quantity as f32;
             let taxes = (transaction.buy_unit_tax.unwrap_or_default() + transaction.sell_unit_tax) * transaction.quantity as f32;
             let markup_percentage = transaction.buy_unit_price.map_or(0.0, |x| {
-                ((transaction.sell_unit_price / x - 1.0) * 100.0)
+                let p = transaction.sell_unit_price - x;
+                ((p / x) * 100.0)
             });
 
             (profit, taxes, markup_percentage)
