@@ -16,7 +16,7 @@ pub struct CompleteTransaction {
     pub amount: i32    
 }
 
-#[derive(Queryable, Debug, Serialize)]
+#[derive(Queryable, Debug, Serialize, Clone)]
 pub struct CompleteTransactionView {
     pub type_name: String,
     pub type_id: i32,

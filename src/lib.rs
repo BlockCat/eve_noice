@@ -49,6 +49,7 @@ pub fn rocket_factory() -> Result<rocket::Rocket, String> {
         
         engines.tera.register_filter("isk", isk_filter);
         engines.tera.register_filter("duration", duration_filter);
+        engines.tera.register_filter("markup", markup_filter);
     });
 
     let rocket = rocket::ignite()
@@ -59,6 +60,16 @@ pub fn rocket_factory() -> Result<rocket::Rocket, String> {
         .mount("/public", StaticFiles::from("assets"));
 
     Ok(rocket)
+}
+
+fn markup_filter(value: tera::Value, _: HashMap<String, tera::Value>) -> tera::Result<tera::Value> {
+    use separator::FixedPlaceSeparatable;
+    if value.is_f64() {
+        let isk = value.as_f64().unwrap().separated_string_with_fixed_place(2);
+        Ok(isk.into())
+    } else {
+        Err(tera::Error::from(tera::ErrorKind::Msg("Was not an f64".to_owned())))
+    }
 }
 
 fn isk_filter(value: tera::Value, _: HashMap<String, tera::Value>) -> tera::Result<tera::Value> {
@@ -108,6 +119,5 @@ table! {
         buy_unit_tax -> Nullable<Float>,
         sell_unit_price -> Float,
         sell_unit_tax -> Float,        
-        
     }
  }

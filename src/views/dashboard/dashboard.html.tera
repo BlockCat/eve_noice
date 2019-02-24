@@ -36,7 +36,7 @@
                 <td class="right">{{transaction.unit_price | isk}}</td>                
                 <td class="right">{{transaction.taxes | isk}}</td>                
                 {{ macros::isk_td(amount=transaction.profit) }}
-                <td class="center">{{transaction.markup_percentage}}</td>
+                <td class="center">{{transaction.markup_percentage | markup}}</td>
                 <td class="left">{{transaction.time_span | duration}}</td>
             </tr>
         {% endfor %}

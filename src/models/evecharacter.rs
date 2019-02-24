@@ -44,7 +44,7 @@ impl<'a, 'r> request::FromRequest<'a, 'r> for EveCharacter {
         let db = request.guard::<EveDatabase>()?;        
 
         let user_id: i32 = match request.cookies()
-            .get_private("key")
+            .get_private("key")            
             .and_then(|cookie| cookie.value().parse().ok()) {
                 Some(user_id) => user_id,
                 None => return rocket::Outcome::Forward(())
