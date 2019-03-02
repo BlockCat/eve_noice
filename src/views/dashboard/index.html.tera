@@ -6,8 +6,7 @@
         inspired by <a href="https://pwning.de/neat/">https://pwning.de/neat/</a>
     </p>
     <p>I created this tool because (imho) other accounting tools are overdesigned and make 
-    it difficult to 'just get what you want'. This tool aims to be as simple as possible, 
-    after all, who needs design if it just hinders you?
+    it difficult to 'just get what you want', which is checking profit. This tool aims to be as simple as possible.
     </p>
 
     <p>If you are on this page, it means you are not logged in.</p>
@@ -22,12 +21,11 @@
     <p>Noice is an EVE Online profit tracker that tracks profit.</p>
     <h3>Why?</h3>
     <p>Because I like to wake up and check profits I made as fast as possible.</p>
-    <h3>Why do I sometimes get this unauthorized error?</h3>
-    <p>Currently on a sqlite database which doesn't support concurrent writes, should probably move this to a proper database. Just refresh for now?</p>
+    <h3>Why is the site slow</h3>
+    <p>It runs on a very (very) cheap server</p>
     <h3>Do I seriously need to log out and log in each time I want to switch EVE Characters?</h3>
-    <p>Yep, but maybe if you ask nicely</p>
+    <p>Yep</p>
     <h3>Why are corp wallets not supported?</h3>
     <p>You do station trading with corp wallets? Probably won't implemented.</p>
-    <h3>Not even if I send you isk?</h3>
-    <p>Uh, depends</p>
+
 {% endblock content %}
