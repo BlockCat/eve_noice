@@ -33,12 +33,8 @@ use rocket_contrib::templates::tera;
 use rocket_contrib::serve::StaticFiles;
 use std::collections::HashMap;
 
-#[cfg(feature="diesel_sqlite")]
-#[database("eve_db")]
-pub struct EveDatabase(diesel::SqliteConnection);
-
 #[cfg(feature="diesel_mysql")]
-#[database("eve_db")]
+#[database("diesel_mysql")]
 pub struct EveDatabase(diesel::MysqlConnection);
 
 pub fn rocket_factory() -> Result<rocket::Rocket, String> {    

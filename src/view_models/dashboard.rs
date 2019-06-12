@@ -1,4 +1,4 @@
-use separator::FixedPlaceSeparatable;
+
 use crate::models::CompleteTransactionView;
 
 #[derive(Serialize)]
