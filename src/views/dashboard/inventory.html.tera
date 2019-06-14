@@ -1,0 +1,32 @@
+{% extends "base" %}
+{% import "macros" as macros %}
+{% block content %}
+    <nav>
+        <a href="/update"><abbr title="Only once per hour, blame CCP not me">Update</abbr></a> |
+        <a href="/">Dashboard</a> |
+        <a href="/inventory">Inventory</a> |
+        <a href="/characters/config">Config</a> |
+        <a href="/about">About</a> |
+        <a href="/characters/logout">Logout</a>
+    </nav>    
+    <h1>Inventory</h1>   
+    
+    <table class="decorated_table">
+        <thead>
+            <th>Date</th>            
+            <th>Item</th>
+            <th>Quantity</th>
+            <th>Unit price</th>            
+        </thead>
+        <tbody>
+        {% for item in items %}
+            <tr>
+                <td class="center">{{item.date | date(format="%v")}}</td>
+                <td class="left">{{ item.invtype }}</td>
+                <td class="center">{{item.amount}}</td>
+                <td class="right">{{item.isk_buy | isk}}</td>                                
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+{% endblock content %}

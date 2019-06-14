@@ -117,3 +117,15 @@ table! {
         sell_unit_tax -> Float,        
     }
  }
+
+ table! {
+    transaction_queue_views (buy_transaction_id) {
+        type_name -> Text,
+        type_id -> Integer,
+        character_id -> Integer,        
+        buy_transaction_id -> BigInt,        
+        buy_date -> Timestamp,        
+        quantity -> Integer,
+        buy_unit_price -> Float,
+    }
+ }

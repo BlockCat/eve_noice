@@ -1,0 +1,22 @@
+{% extends "base" %}
+
+{% block content %}
+    <nav>
+        <a href="/update"><abbr title="Only once per hour, blame CCP not me">Update</abbr></a> |
+        <a href="/">Dashboard</a> |
+        <a href="/inventory">Inventory</a> |
+        <a href="/characters/config">Config</a> |
+        <a href="/about">About</a> |
+        <a href="/characters/logout">Logout</a>
+    </nav>
+    <p>Noice is an EVE Online accounting tool, 
+        inspired by <a href="https://pwning.de/neat/">https://pwning.de/neat/</a>
+    </p>
+    <p>I created this tool because (imho) other accounting tools are overdesigned and make 
+    it difficult to 'just get what you want', which is checking profit. This tool aims to be as simple as possible.
+    </p>
+
+    <p>If you want to contact me for suggestions, errors or some nice talk, send me an EVE mail to: <a href="https://evewho.com/pilot/Torry+Momaki">Torry Momaki</a> and I will hopefully read it soon.</p>
+
+
+{% endblock content %}

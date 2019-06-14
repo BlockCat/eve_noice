@@ -22,10 +22,10 @@
     <h3>Why?</h3>
     <p>Because I like to wake up and check profits I made as fast as possible.</p>
     <h3>Why is the site slow</h3>
-    <p>It runs on a very (very) cheap server</p>
+    <p>It runs on a very (very) cheap server</p>    
     <h3>Do I seriously need to log out and log in each time I want to switch EVE Characters?</h3>
-    <p>Yep</p>
-    <h3>Why are corp wallets not supported?</h3>
-    <p>You do station trading with corp wallets? Probably won't implemented.</p>
+    <p>Yep</p>    
+
+    <p>If you want to contact me for suggestions, errors or some nice talk, send me an EVE mail to: <a href="https://evewho.com/pilot/Torry+Momaki">Torry Momaki</a> and I will hopefully read it soon.</p>
 
 {% endblock content %}

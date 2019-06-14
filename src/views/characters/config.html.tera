@@ -4,7 +4,9 @@
     <nav>
         <a href="/update"><abbr title="Only once per hour, blame CCP not me">Update</abbr></a> |
         <a href="/">Dashboard</a> |
+        <a href="/inventory">Inventory</a> |
         <a href="/characters/config">Config</a> |
+        <a href="/about">About</a> |
         <a href="/characters/logout">Logout</a>
     </nav>
     <h1>Character config</h1>

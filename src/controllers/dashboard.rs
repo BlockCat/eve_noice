@@ -11,8 +11,14 @@ use crate::auth;
 use crate::EveDatabase;
 use crate::esi::EsiWalletTransactions;
 use crate::models::{ EveCharacter, WalletTransaction, TransactionQueue, CompleteTransaction, CompleteTransactionView };
-use crate::view_models::{ DashboardViewModel, ViewTransaction, DayProfit, TypeProfit };
+use crate::view_models::{ DashboardViewModel, ViewTransaction, DayProfit, TypeProfit, InventoryViewModel, InventoryItem };
 
+
+pub fn get_routes() -> Vec<Route> {
+    routes![index, dashboard, update_error, update, about, inventory, inventory_error]
+}
+
+/// Index page when the user is logged in
 #[get("/?<days>")]
 pub fn dashboard(eve_character: EveCharacter, db: EveDatabase, days: Option<i64>) -> Template {
     use std::cmp::{ max, min };
@@ -30,9 +36,38 @@ pub fn dashboard(eve_character: EveCharacter, db: EveDatabase, days: Option<i64>
     ))
 }
 
+#[get("/inventory?<item>")]
+pub fn inventory(eve_character: EveCharacter, db: EveDatabase, item: Option<String>) -> Template {
+    let inventory = crate::repository::inventory(eve_character.id, item, &db).expect("Could not get inventory");
+    let inventory = inventory.into_iter()
+        .map(|i| {
+            InventoryItem {
+                date: i.buy_date.date(),
+                invtype: i.type_name,
+                amount: i.quantity,
+                isk_buy: i.buy_unit_price,                
+            }
+        }).collect();
+
+
+    Template::render("dashboard/inventory", InventoryViewModel {items: inventory})
+}
+
+#[get("/inventory", rank = 2)]
+pub fn inventory_error() -> Status {
+    Status::new(403, "Not authenticated")    
+}
+
+/// Index page when the user is not logged in
 #[get("/", rank = 2)]
 pub fn index() -> Template {
     Template::render("dashboard/index", std::collections::HashMap::<String, String>::new())
+}
+
+/// Display the about page
+#[get("/about")]
+pub fn about() -> Template {
+    Template::render("dashboard/about", std::collections::HashMap::<String, String>::new())
 }
 
 // TODO: When updating we probably want some lock or something?
@@ -153,13 +188,10 @@ pub fn update(eve_character: EveCharacter, mut client: auth::AuthedClient, db: E
     Redirect::to(uri!(dashboard: _))
 }
 
+/// When a user is not logged in.
 #[get("/update", rank = 2)]
 pub fn update_error() -> Status {
     Status::new(403, "Not authenticated")    
-}
-
-pub fn get_routes() -> Vec<Route> {
-    routes![index, dashboard, update_error, update]
 }
 
 fn get_transactions_view(transactions: &[CompleteTransactionView]) -> Vec<ViewTransaction> {
