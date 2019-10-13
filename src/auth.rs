@@ -29,14 +29,25 @@ impl<'a, 'r> request::FromRequest<'a, 'r> for AuthedClient {
         use crate::schema::eve_characters::dsl::*;
         use diesel::prelude::*;
 
-        let mut eve_character = request.guard::<EveCharacter>()?;        
+        let mut eve_character_guard = request.guard::<EveCharacter>();
+
+        if !eve_character_guard.is_success() {
+            return rocket::Outcome::Forward(());
+        }
+
+        let mut eve_character = eve_character_guard.unwrap();
 
         // We get an eve_character,
         let taccess_token = if eve_character.expiry_date > chrono::Utc::now().naive_utc() { // Access token is not yet expired
             eve_character.access_token.clone()
         } else { // Access token is expired            
-            let database = request.guard::<EveDatabase>()?;
+            let database_guard = request.guard::<EveDatabase>();
 
+            if !database_guard.is_success() {
+                return rocket::Outcome::Forward(());
+            }
+
+            let database = database_guard.unwrap();
             let config = create_config();
             
             let token: Token = match config.exchange_refresh_token(eve_character.refresh_token) {

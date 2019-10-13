@@ -41,7 +41,11 @@ impl<'a, 'r> request::FromRequest<'a, 'r> for EveCharacter {
     fn from_request(request: &'a request::Request<'r>) -> request::Outcome<Self, Self::Error> {
         use crate::schema::eve_characters::dsl::*;
 
-        let db = request.guard::<EveDatabase>()?;        
+        let db = request.guard::<EveDatabase>();
+
+        if !db.is_success() {
+            return rocket::Outcome::Forward(());
+        }
 
         let user_id: i32 = match request.cookies()
             .get_private("key")            
@@ -52,7 +56,7 @@ impl<'a, 'r> request::FromRequest<'a, 'r> for EveCharacter {
 
         let eve_character = eve_characters
             .filter(id.eq(user_id))
-            .first::<EveCharacter>(&db.0);
+            .first::<EveCharacter>(&db.unwrap().0);
 
         match eve_character {
             Ok(eve_character) => rocket::Outcome::Success(eve_character),
